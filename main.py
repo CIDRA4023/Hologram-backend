@@ -146,6 +146,7 @@ def get_items_video(channel_id, youtube):
 # チャンネルアイテムの取得
 def get_items_channel(channel_id, youtube):
     print('channelID', channel_id)
+    single_channel_item = None
     try:
         channel_items = youtube.channels().list(
             part='snippet',
@@ -173,18 +174,34 @@ def get_db_id(rdb):
 
 def create_data_format(video_item, channel_item, event_type):
     if event_type == 'live':
-        live_data = {
-            video_item['id']: {
-                u'title': video_item['snippet']['title'],
-                u'thumbnailUrl': video_item['snippet']['thumbnails']['high']['url'],
-                u'startTime': video_item['liveStreamingDetails']['actualStartTime'],
-                u'currentViewers': video_item['liveStreamingDetails']['concurrentViewers'],
-                u'channelName': channel_item['snippet']['title'],
-                u'channelIconUrl': channel_item['snippet']['thumbnails']['high']['url'],
-                u'eventType': video_item['snippet']['liveBroadcastContent']
+        if 'concurrentViewers' in video_item['liveStreamingDetails']['concurrentViewers']:
+            live_data = {
+                video_item['id']: {
+                    u'title': video_item['snippet']['title'],
+                    u'thumbnailUrl': video_item['snippet']['thumbnails']['high']['url'],
+                    u'startTime': video_item['liveStreamingDetails']['actualStartTime'],
+                    u'currentViewers': video_item['liveStreamingDetails']['concurrentViewers'],
+                    u'channelName': channel_item['snippet']['title'],
+                    u'channelIconUrl': channel_item['snippet']['thumbnails']['high']['url'],
+                    u'eventType': video_item['snippet']['liveBroadcastContent']
+                }
             }
-        }
-        return live_data
+            return live_data
+        # プレミアム公開中の動画（視聴者数が取得できない）
+        elif 'concurrentViewers' not in video_item['liveStreamingDetails']['concurrentViewers']:
+            live_premium_data = {
+                video_item['id']: {
+                    u'title': video_item['snippet']['title'],
+                    u'thumbnailUrl': video_item['snippet']['thumbnails']['high']['url'],
+                    u'startTime': video_item['liveStreamingDetails']['actualStartTime'],
+                    u'currentViewers': 'プレミアム公開中',
+                    u'channelName': channel_item['snippet']['title'],
+                    u'channelIconUrl': channel_item['snippet']['thumbnails']['high']['url'],
+                    u'eventType': video_item['snippet']['liveBroadcastContent']
+                }
+            }
+            return live_premium_data
+
     elif event_type == 'upcoming':
         upcoming_data = {
             video_item['id']: {
@@ -197,33 +214,37 @@ def create_data_format(video_item, channel_item, event_type):
             }
         }
         return upcoming_data
-    elif event_type == 'none' and 'likeCount' in video_item['statistics']:
-        none_data = {
-            video_item['id']: {
-                u'title': video_item['snippet']['title'],
-                u'thumbnailUrl': video_item['snippet']['thumbnails']['high']['url'],
-                u'publishedAt': video_item['snippet']['publishedAt'],
-                u'viewCount': video_item['statistics']['viewCount'],
-                u'likeCount': video_item['statistics']['likeCount'],
-                u'channelName': channel_item['snippet']['title'],
-                u'channelIconUrl': channel_item['snippet']['thumbnails']['high']['url'],
-                u'eventType': video_item['snippet']['liveBroadcastContent']
+
+    elif event_type == 'none':
+        if 'likeCount' in video_item['statistics']:
+            none_data = {
+                video_item['id']: {
+                    u'title': video_item['snippet']['title'],
+                    u'thumbnailUrl': video_item['snippet']['thumbnails']['high']['url'],
+                    u'publishedAt': video_item['snippet']['publishedAt'],
+                    u'viewCount': video_item['statistics']['viewCount'],
+                    u'likeCount': video_item['statistics']['likeCount'],
+                    u'channelName': channel_item['snippet']['title'],
+                    u'channelIconUrl': channel_item['snippet']['thumbnails']['high']['url'],
+                    u'eventType': video_item['snippet']['liveBroadcastContent']
+                }
             }
-        }
-        return none_data
-    else:
-        none_noLike_data = {
-            video_item['id']: {
-                u'title': video_item['snippet']['title'],
-                u'thumbnailUrl': video_item['snippet']['thumbnails']['high']['url'],
-                u'publishedAt': video_item['snippet']['publishedAt'],
-                u'viewCount': video_item['statistics']['viewCount'],
-                u'channelName': channel_item['snippet']['title'],
-                u'channelIconUrl': channel_item['snippet']['thumbnails']['high']['url'],
-                u'eventType': video_item['snippet']['liveBroadcastContent']
+            return none_data
+        # 評価非表示の場合
+        if 'likeCount' not in video_item['statistics']:
+            none_hide_data = {
+                video_item['id']: {
+                    u'title': video_item['snippet']['title'],
+                    u'thumbnailUrl': video_item['snippet']['thumbnails']['high']['url'],
+                    u'publishedAt': video_item['snippet']['publishedAt'],
+                    u'viewCount': video_item['statistics']['viewCount'],
+                    u'likeCount': 'None',
+                    u'channelName': channel_item['snippet']['title'],
+                    u'channelIconUrl': channel_item['snippet']['thumbnails']['high']['url'],
+                    u'eventType': video_item['snippet']['liveBroadcastContent']
+                }
             }
-        }
-        return none_noLike_data
+            return none_hide_data
 
 
 def add_video_item(id_list, rdb, channel_id, youtube):
