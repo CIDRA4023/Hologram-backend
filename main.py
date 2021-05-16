@@ -38,40 +38,40 @@ def main():
 
     # チャンネルIDリスト
 
-    channelIdList = ['UCCzUftO8KOVkV4wQG1vkUvg',
-                     'UCp6993wxpyDPHUpavwDFqgg',
-                     'UC0TXe_LYZ4scaW2XMyi5_kw',
-                     'UCDqI2jOz0weumE8s7paEk6g',
-                     'UC-hM6YJuNYVAmUWxeIr9FeA',
-                     'UCdn5BQ06XqgXoAxIhbqw5Rg',
-                     'UCQ0UDLQCjY0rmuxCDE38FGg',
-                     'UCD8HOxPs4Xvsm8H0ZxXGiBw',
-                     'UC1CfXB_kRs3C-zaeTG3oGyg',
-                     'UCFTLzh12_nrtzqBPsTCqenA',
-                     'UC1opHUrw8rvnsadT-iGp7Cg',
-                     'UCp3tgHXw_HI0QMk1K8qh3gQ',
-                     'UC7fk0CB07ly8oSl0aqKkqFg',
-                     'UCXTpFs_3PqI41qX2d9tL2Rw',
-                     'UCvzGlP9oQwU--Y0r9id_jnA',
-                     'UCp-5t9SrOQwXMU7iIjQfARg',
-                     'UCvaTdHTWBGv3MKj3KVqJVCw',
-                     'UChAnqc_AY5_I3Px5dig3X1Q',
-                     'UCvInZx9h3jC2JzsIzoOebWg',
-                     'UCdyqAaZDKHXg4Ahi7VENThQ',
-                     'UCCzUftO8KOVkV4wQG1vkUvg',
-                     'UC1DCedRgGHBdm81E1llLhOQ',
-                     'UCl_gCybOJRIgOXw6Qb4qJzQ',
-                     'UC5CwaMl1eIgY8h02uZw7u8A',
-                     'UCZlDXzGoo7d44bwdNObFacg',
-                     'UCS9uQI-jC3DE0L4IpXyvr6w',
-                     'UCqm3BQLlJfvkTsX_hvm0UmA',
-                     'UC1uv2Oq6kNxgATlCiez59hw',
-                     'UCa9Y57gfeY0Zro_noHRVrnw',
-                     'UCFKOVgVbGmX65RxO3EtH3iw',
-                     'UCAWSyEs_Io8MtpY3m-zqILA',
-                     'UCUKD-uaobj9jiqB-VXt71mA',
-                     'UCK9V2B22uJYu3N7eR_BT9QA',
-                     'UCJFZiqLMntJufDCHc6bQixg']
+    channelIdList = [
+        'UCp6993wxpyDPHUpavwDFqgg',
+        'UC0TXe_LYZ4scaW2XMyi5_kw',
+        'UCDqI2jOz0weumE8s7paEk6g',
+        'UC-hM6YJuNYVAmUWxeIr9FeA',
+        'UCdn5BQ06XqgXoAxIhbqw5Rg',
+        'UCQ0UDLQCjY0rmuxCDE38FGg',
+        'UCD8HOxPs4Xvsm8H0ZxXGiBw',
+        'UC1CfXB_kRs3C-zaeTG3oGyg',
+        'UCFTLzh12_nrtzqBPsTCqenA',
+        'UC1opHUrw8rvnsadT-iGp7Cg',
+        'UCp3tgHXw_HI0QMk1K8qh3gQ',
+        'UC7fk0CB07ly8oSl0aqKkqFg',
+        'UCXTpFs_3PqI41qX2d9tL2Rw',
+        'UCvzGlP9oQwU--Y0r9id_jnA',
+        'UCp-5t9SrOQwXMU7iIjQfARg',
+        'UCvaTdHTWBGv3MKj3KVqJVCw',
+        'UChAnqc_AY5_I3Px5dig3X1Q',
+        'UCvInZx9h3jC2JzsIzoOebWg',
+        'UCdyqAaZDKHXg4Ahi7VENThQ',
+        'UCCzUftO8KOVkV4wQG1vkUvg',
+        'UC1DCedRgGHBdm81E1llLhOQ',
+        'UCl_gCybOJRIgOXw6Qb4qJzQ',
+        'UC5CwaMl1eIgY8h02uZw7u8A',
+        'UCZlDXzGoo7d44bwdNObFacg',
+        'UCS9uQI-jC3DE0L4IpXyvr6w',
+        'UCqm3BQLlJfvkTsX_hvm0UmA',
+        'UC1uv2Oq6kNxgATlCiez59hw',
+        'UCa9Y57gfeY0Zro_noHRVrnw',
+        'UCFKOVgVbGmX65RxO3EtH3iw',
+        'UCAWSyEs_Io8MtpY3m-zqILA',
+        'UCUKD-uaobj9jiqB-VXt71mA',
+        'UCK9V2B22uJYu3N7eR_BT9QA',
+        'UCJFZiqLMntJufDCHc6bQixg']
 
     # DB上のアイテムを読み込み
     db_id = get_db_id(ref_db)
@@ -91,27 +91,32 @@ def main():
 
 def parse_xml(channel_id):
     rssUrl = f'https://www.youtube.com/feeds/videos.xml?channel_id={channel_id}'
-    with urllib.request.urlopen(rssUrl) as response:
-        # UrlからXmlデータを取得しrootへ格納
-        xmlData = response.read()
-        root = ET.fromstring(xmlData)
-        video_id_list = []
-        last_week = get_last_week_date()
+    try:
+        with urllib.request.urlopen(rssUrl) as response:
+            # UrlからXmlデータを取得しrootへ格納
+            xmlData = response.read()
+            root = ET.fromstring(xmlData)
+            video_id_list = []
+            last_week = get_last_week_date()
 
-        # entryタグ内のvideoIDとpublishedAtを取得
-        for r in root.findall('{http://www.w3.org/2005/Atom}entry'):
+            # entryタグ内のvideoIDとpublishedAtを取得
+            for r in root.findall('{http://www.w3.org/2005/Atom}entry'):
 
-            vid = r[1].text
-            published = r[6].text
-            # 投稿時間が先週よりも前ならループ抜ける
-            if published < last_week:
-                break
-            video_id_list.append(vid)
+                vid = r[1].text
+                published = r[6].text
+                # 投稿時間が先週よりも前ならループ抜ける
+                if published < last_week:
+                    break
+                video_id_list.append(vid)
 
-        # 取得したvideoIdをカンマ区切り文字列にする
-    videoIdList_str = ",".join(video_id_list)
+            # 取得したvideoIdをカンマ区切り文字列にする
+        videoIdList_str = ",".join(video_id_list)
+        return videoIdList_str
 
-    return videoIdList_str
+    except urllib.error.HTTPError as e:
+        print('HTTPError', channel_id, e.code)
+    except urllib.error.URLError as e:
+        print('URLError', channel_id, e.reason)
 
 
 def get_last_week_date():
@@ -130,26 +135,31 @@ def get_items_video(channel_id, youtube):
     # クォータ使い切った時とJSONを返却されなかったときの例外処理
     try:
         video_items = youtube.videos().list(
-            part='snippet,liveStreamingDetails,statistic',
+            part='snippet,liveStreamingDetails,statistics',
             id=f'{parse_xml(channel_id)}',
         ).execute()
         return video_items
     except googleapiclient.errors.HttpError as e:
-        print(e)
+        print('get_items_video', e)
 
 
 # チャンネルアイテムの取得
 def get_items_channel(channel_id, youtube):
-    single_channel_item = None
-    channel_items = youtube.channels().list(
-        part='snippet',
-        id=f'{channel_id}'
-    ).execute()
+    print('channelID', channel_id)
+    try:
+        channel_items = youtube.channels().list(
+            part='snippet',
+            id=f'{channel_id}'
+        ).execute()
+        for single in channel_items['items']:
+            single_channel_item = single
 
-    for single in channel_items['items']:
-        single_channel_item = single
+        return single_channel_item
 
-    return single_channel_item
+    except googleapiclient.errors.HttpError as e:
+        print(e)
+    except KeyError as e:
+        print('get_items_channel:KeyError', e)
 
 
 # FirestoreのドキュメントIDを取得
@@ -223,7 +233,7 @@ def add_video_item(id_list, rdb, channel_id, youtube):
 
         # YouTubeAPIを使って取得したアイテムをFirestoreに追加
         for single_Video in video_item:
-
+            print('videoID', single_Video['id'])
             event_type = single_Video['snippet']['liveBroadcastContent']
 
             # FirestoreのドキュメントIDとXmlから取得したIDを比較
@@ -231,7 +241,6 @@ def add_video_item(id_list, rdb, channel_id, youtube):
             if single_Video['id'] in id_list:
                 update_item = create_data_format(single_Video, channel_item, event_type)
                 rdb.update(update_item)
-
             # 不一致だった場合追加
             else:
                 update_item = create_data_format(single_Video, channel_item, event_type)
@@ -239,9 +248,6 @@ def add_video_item(id_list, rdb, channel_id, youtube):
 
     except TypeError as e:
         print(e)
-
-    else:
-        print('else error')
 
 
 main()
