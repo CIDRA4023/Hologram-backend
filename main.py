@@ -14,7 +14,7 @@ from os.path import join, dirname
 from dotenv import load_dotenv
 
 
-def main():
+def main(event, context):
     # 処理前の時刻
     t1 = time.time()
 
@@ -271,4 +271,3 @@ def add_video_item(id_list, rdb, channel_id, youtube):
         print(e)
 
 
-main()
