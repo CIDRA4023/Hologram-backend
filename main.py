@@ -174,7 +174,7 @@ def get_db_id(rdb):
 
 def create_data_format(video_item, channel_item, event_type):
     if event_type == 'live':
-        if 'concurrentViewers' in video_item['liveStreamingDetails']['concurrentViewers']:
+        if 'concurrentViewers' in video_item['liveStreamingDetails']:
             live_data = {
                 video_item['id']: {
                     u'title': video_item['snippet']['title'],
@@ -188,7 +188,7 @@ def create_data_format(video_item, channel_item, event_type):
             }
             return live_data
         # プレミアム公開中の動画（視聴者数が取得できない）
-        elif 'concurrentViewers' not in video_item['liveStreamingDetails']['concurrentViewers']:
+        elif 'concurrentViewers' not in video_item['liveStreamingDetails']:
             live_premium_data = {
                 video_item['id']: {
                     u'title': video_item['snippet']['title'],
