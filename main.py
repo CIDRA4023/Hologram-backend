@@ -1,4 +1,5 @@
 import firebase_admin
+import googleapiclient
 from firebase_admin import credentials
 from firebase_admin import db
 import time
@@ -126,12 +127,15 @@ def get_last_week_date():
 
 # Videoアイテムの取得
 def get_items_video(channel_id, youtube):
-    video_items = youtube.videos().list(
-        part='snippet,liveStreamingDetails,statistics',
-        id=f'{parse_xml(channel_id)}',
-    ).execute()
-
-    return video_items
+    # クォータ使い切った時とJSONを返却されなかったときの例外処理
+    try:
+        video_items = youtube.videos().list(
+            part='snippet,liveStreamingDetails,statistic',
+            id=f'{parse_xml(channel_id)}',
+        ).execute()
+        return video_items
+    except googleapiclient.errors.HttpError as e:
+        print(e)
 
 
 # チャンネルアイテムの取得
@@ -213,23 +217,31 @@ def create_data_format(video_item, channel_item, event_type):
 
 
 def add_video_item(id_list, rdb, channel_id, youtube):
-    video_item = get_items_video(channel_id, youtube)['items']
-    channel_item = get_items_channel(channel_id, youtube)
+    try:
+        video_item = get_items_video(channel_id, youtube)['items']
+        channel_item = get_items_channel(channel_id, youtube)
 
-    # YouTubeAPIを使って取得したアイテムをFirestoreに追加
-    for single_Video in video_item:
+        # YouTubeAPIを使って取得したアイテムをFirestoreに追加
+        for single_Video in video_item:
 
-        event_type = single_Video['snippet']['liveBroadcastContent']
+            event_type = single_Video['snippet']['liveBroadcastContent']
 
-        # FirestoreのドキュメントIDとXmlから取得したIDを比較
-        # 一致していれば一部の要素を更新
-        if single_Video['id'] in id_list:
-            update_item = create_data_format(single_Video, channel_item, event_type)
-            rdb.update(update_item)
+            # FirestoreのドキュメントIDとXmlから取得したIDを比較
+            # 一致していれば一部の要素を更新
+            if single_Video['id'] in id_list:
+                update_item = create_data_format(single_Video, channel_item, event_type)
+                rdb.update(update_item)
 
-        # 不一致だった場合追加
-        else:
-            update_item = create_data_format(single_Video, channel_item, event_type)
-            rdb.update(update_item)
+            # 不一致だった場合追加
+            else:
+                update_item = create_data_format(single_Video, channel_item, event_type)
+                rdb.update(update_item)
+
+    except TypeError as e:
+        print(e)
+
+    else:
+        print('else error')
+
 
 main()
