@@ -13,6 +13,8 @@ import os
 from os.path import join, dirname
 from dotenv import load_dotenv
 
+xml_video_id = []
+
 
 def main(event, context):
     # 処理前の時刻
@@ -49,7 +51,7 @@ def main(event, context):
         'UC1CfXB_kRs3C-zaeTG3oGyg',
         'UCFTLzh12_nrtzqBPsTCqenA',
         'UC1opHUrw8rvnsadT-iGp7Cg',
-        'UCp3tgHXw_HI0QMk1K8qh3gQ',
+        'UC1suqwovbL1kzsoaZgFZLKg',
         'UC7fk0CB07ly8oSl0aqKkqFg',
         'UCXTpFs_3PqI41qX2d9tL2Rw',
         'UCvzGlP9oQwU--Y0r9id_jnA',
@@ -80,6 +82,8 @@ def main(event, context):
     for channel_id in channelIdList:
         add_video_item(db_id, ref_db, channel_id, youtube)
 
+    delete_video_item(db_id, ref_db)
+
     # delete_items_last_week(ref_db)
     # 処理後の時刻
     t2 = time.time()
@@ -108,6 +112,7 @@ def parse_xml(channel_id):
                 if published < last_week:
                     break
                 video_id_list.append(vid)
+                xml_video_id.append(vid)
 
             # 取得したvideoIdをカンマ区切り文字列にする
         videoIdList_str = ",".join(video_id_list)
@@ -271,3 +276,10 @@ def add_video_item(id_list, rdb, channel_id, youtube):
         print(e)
 
 
+def delete_video_item(db_id, rdb):
+    print('db', len(db_id), db_id)
+    print('xml', len(xml_video_id), xml_video_id)
+    did = set(db_id).difference(set(xml_video_id))
+    print('did', did)
+    for d in did:
+        rdb.child(f'{d}').delete()
