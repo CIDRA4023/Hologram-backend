@@ -14,6 +14,7 @@ from os.path import join, dirname
 from dotenv import load_dotenv
 
 xml_video_id = []
+error_channel_id = []
 
 
 def main(event, context):
@@ -120,8 +121,10 @@ def parse_xml(channel_id):
 
     except urllib.error.HTTPError as e:
         print('HTTPError', channel_id, e.code)
+        error_channel_id.append(channel_id)
     except urllib.error.URLError as e:
         print('URLError', channel_id, e.reason)
+        error_channel_id.append(channel_id)
 
 
 def get_last_week_date():
@@ -146,6 +149,7 @@ def get_items_video(channel_id, youtube):
         return video_items
     except googleapiclient.errors.HttpError as e:
         print('get_items_video', e)
+        error_channel_id.append(channel_id)
 
 
 # チャンネルアイテムの取得
@@ -164,8 +168,10 @@ def get_items_channel(channel_id, youtube):
 
     except googleapiclient.errors.HttpError as e:
         print(e)
+        error_channel_id.append(channel_id)
     except KeyError as e:
         print('get_items_channel:KeyError', e)
+        error_channel_id.append(channel_id)
 
 
 # FirestoreのドキュメントIDを取得
@@ -186,6 +192,7 @@ def create_data_format(video_item, channel_item, event_type):
                     u'thumbnailUrl': video_item['snippet']['thumbnails']['high']['url'],
                     u'startTime': video_item['liveStreamingDetails']['actualStartTime'],
                     u'currentViewers': video_item['liveStreamingDetails']['concurrentViewers'],
+                    u'channelId': video_item['snippet']['channelId'],
                     u'channelName': channel_item['snippet']['title'],
                     u'channelIconUrl': channel_item['snippet']['thumbnails']['high']['url'],
                     u'eventType': video_item['snippet']['liveBroadcastContent']
@@ -200,6 +207,7 @@ def create_data_format(video_item, channel_item, event_type):
                     u'thumbnailUrl': video_item['snippet']['thumbnails']['high']['url'],
                     u'startTime': video_item['liveStreamingDetails']['actualStartTime'],
                     u'currentViewers': 'プレミアム公開中',
+                    u'channelId': video_item['snippet']['channelId'],
                     u'channelName': channel_item['snippet']['title'],
                     u'channelIconUrl': channel_item['snippet']['thumbnails']['high']['url'],
                     u'eventType': video_item['snippet']['liveBroadcastContent']
@@ -213,6 +221,7 @@ def create_data_format(video_item, channel_item, event_type):
                 u'title': video_item['snippet']['title'],
                 u'thumbnailUrl': video_item['snippet']['thumbnails']['high']['url'],
                 u'scheduledStartTime': video_item['liveStreamingDetails']['scheduledStartTime'],
+                u'channelId': video_item['snippet']['channelId'],
                 u'channelName': channel_item['snippet']['title'],
                 u'channelIconUrl': channel_item['snippet']['thumbnails']['high']['url'],
                 u'eventType': video_item['snippet']['liveBroadcastContent']
@@ -229,6 +238,7 @@ def create_data_format(video_item, channel_item, event_type):
                     u'publishedAt': video_item['snippet']['publishedAt'],
                     u'viewCount': video_item['statistics']['viewCount'],
                     u'likeCount': video_item['statistics']['likeCount'],
+                    u'channelId': video_item['snippet']['channelId'],
                     u'channelName': channel_item['snippet']['title'],
                     u'channelIconUrl': channel_item['snippet']['thumbnails']['high']['url'],
                     u'eventType': video_item['snippet']['liveBroadcastContent']
@@ -244,6 +254,7 @@ def create_data_format(video_item, channel_item, event_type):
                     u'publishedAt': video_item['snippet']['publishedAt'],
                     u'viewCount': video_item['statistics']['viewCount'],
                     u'likeCount': 'None',
+                    u'channelId': video_item['snippet']['channelId'],
                     u'channelName': channel_item['snippet']['title'],
                     u'channelIconUrl': channel_item['snippet']['thumbnails']['high']['url'],
                     u'eventType': video_item['snippet']['liveBroadcastContent']
@@ -279,7 +290,12 @@ def add_video_item(id_list, rdb, channel_id, youtube):
 def delete_video_item(db_id, rdb):
     print('db', len(db_id), db_id)
     print('xml', len(xml_video_id), xml_video_id)
+    # 一週間以上まえのアイテムのみ抽出
     did = set(db_id).difference(set(xml_video_id))
     print('did', did)
     for d in did:
-        rdb.child(f'{d}').delete()
+        db_channelId = rdb.child(f'{d}').child('channelId').get()
+        # dbから取得したアイテムのチャンネルIDがエラーが発生したチャンネルIDリストの中に含まれていなければ削除
+        if db_channelId not in set(error_channel_id):
+            print('delete', f'{d}')
+            rdb.child(f'{d}').delete()
