@@ -85,7 +85,10 @@ def main(event, context):
 
     delete_video_item(db_id, ref_db)
 
+    xml_video_id.clear()
+
     # delete_items_last_week(ref_db)
+    print(len(xml_video_id))
     # 処理後の時刻
     t2 = time.time()
 
@@ -96,6 +99,7 @@ def main(event, context):
 
 def parse_xml(channel_id):
     rssUrl = f'https://www.youtube.com/feeds/videos.xml?channel_id={channel_id}'
+    print('parse_xml')
     try:
         with urllib.request.urlopen(rssUrl) as response:
             # UrlからXmlデータを取得しrootへ格納
@@ -140,6 +144,7 @@ def get_last_week_date():
 
 # Videoアイテムの取得
 def get_items_video(channel_id, youtube):
+    print('get_items_video')
     # クォータ使い切った時とJSONを返却されなかったときの例外処理
     try:
         video_items = youtube.videos().list(
@@ -176,6 +181,7 @@ def get_items_channel(channel_id, youtube):
 
 # FirestoreのドキュメントIDを取得
 def get_db_id(rdb):
+    print('get_db_id')
     id_list = []
     key_val = rdb.get()
     for key, val in key_val.items():
@@ -264,13 +270,14 @@ def create_data_format(video_item, channel_item, event_type):
 
 
 def add_video_item(id_list, rdb, channel_id, youtube):
+    print('add_video_item')
     try:
         video_item = get_items_video(channel_id, youtube)['items']
         channel_item = get_items_channel(channel_id, youtube)
 
         # YouTubeAPIを使って取得したアイテムをFirestoreに追加
         for single_Video in video_item:
-            print('videoID', single_Video['id'])
+            # print('videoID', single_Video['id'])
             event_type = single_Video['snippet']['liveBroadcastContent']
 
             # FirestoreのドキュメントIDとXmlから取得したIDを比較
@@ -299,3 +306,4 @@ def delete_video_item(db_id, rdb):
         if db_channelId not in set(error_channel_id):
             print('delete', f'{d}')
             rdb.child(f'{d}').delete()
+
