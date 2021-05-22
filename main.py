@@ -99,9 +99,10 @@ def main(event, context):
 
 def parse_xml(channel_id):
     rssUrl = f'https://www.youtube.com/feeds/videos.xml?channel_id={channel_id}'
+    headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; Win64; x64)'}
     print('parse_xml')
     try:
-        with urllib.request.urlopen(rssUrl) as response:
+        with urllib.request.urlopen(rssUrl, None, headers) as response:
             # UrlからXmlデータを取得しrootへ格納
             xmlData = response.read()
             root = ET.fromstring(xmlData)
