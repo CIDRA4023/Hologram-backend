@@ -74,7 +74,19 @@ def main(event, context):
         'UCAWSyEs_Io8MtpY3m-zqILA',
         'UCUKD-uaobj9jiqB-VXt71mA',
         'UCK9V2B22uJYu3N7eR_BT9QA',
-        'UCJFZiqLMntJufDCHc6bQixg']
+        'UCJFZiqLMntJufDCHc6bQixg',
+        'UCL_qhgtOy0dy1Agp8vkySQg',
+        'UCHsx4Hqa-1ORjQTh9TYDhww',
+        'UCyl1z3jo3XHR1riLFKG5UAg',
+        'UCoSrY_IQQVpmIRZ9Xf-y93g',
+        'UCMwGHR0BTZuLsmjY_NT5Pwg',
+        'UCAoy6rzhSf4ydcYjJw3WoVg',
+        'UCOyYb1c43VlX9rc_lT6NKQw',
+        'UCP0BspO_AMEe3aQqqpo89Dg',
+        'UChgTyjG-pdNvxxhdsXfHQ5Q',
+        'UCYz_5n-uDuChHtLo7My1HnQ',
+        'UC727SQYUvx5pDDGQpTICNWg'
+    ]
 
     # DB上のアイテムを読み込み
     db_id = get_db_id(ref_db)
@@ -100,9 +112,10 @@ def main(event, context):
 def parse_xml(channel_id):
     rssUrl = f'https://www.youtube.com/feeds/videos.xml?channel_id={channel_id}'
     headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; Win64; x64)'}
+    req = urllib.request.Request(rssUrl, None, headers)
     print('parse_xml')
     try:
-        with urllib.request.urlopen(rssUrl, None, headers) as response:
+        with urllib.request.urlopen(req) as response:
             # UrlからXmlデータを取得しrootへ格納
             xmlData = response.read()
             root = ET.fromstring(xmlData)
@@ -149,7 +162,7 @@ def get_items_video(channel_id, youtube):
     # クォータ使い切った時とJSONを返却されなかったときの例外処理
     try:
         video_items = youtube.videos().list(
-            part='snippet,liveStreamingDetails,statistics',
+            part='snippet,liveStreamingDetails,statistics,contentDetails',
             id=f'{parse_xml(channel_id)}',
         ).execute()
         return video_items
@@ -248,7 +261,8 @@ def create_data_format(video_item, channel_item, event_type):
                     u'channelId': video_item['snippet']['channelId'],
                     u'channelName': channel_item['snippet']['title'],
                     u'channelIconUrl': channel_item['snippet']['thumbnails']['high']['url'],
-                    u'eventType': video_item['snippet']['liveBroadcastContent']
+                    u'eventType': video_item['snippet']['liveBroadcastContent'],
+                    u'duration': video_item['contentDetails']['duration']
                 }
             }
             return none_data
