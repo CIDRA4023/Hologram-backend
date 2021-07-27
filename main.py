@@ -17,7 +17,7 @@ xml_video_id = []
 error_channel_id = []
 
 
-def main(event, context):
+def main():
     # 処理前の時刻
     t1 = time.time()
 
@@ -85,7 +85,8 @@ def main(event, context):
         'UCP0BspO_AMEe3aQqqpo89Dg',
         'UChgTyjG-pdNvxxhdsXfHQ5Q',
         'UCYz_5n-uDuChHtLo7My1HnQ',
-        'UC727SQYUvx5pDDGQpTICNWg'
+        'UC727SQYUvx5pDDGQpTICNWg',
+        'UC8rcEBzJSleTkf_-agPM20g'
     ]
 
     # DB上のアイテムを読み込み
@@ -215,7 +216,8 @@ def create_data_format(video_item, channel_item, event_type):
                     u'channelId': video_item['snippet']['channelId'],
                     u'channelName': channel_item['snippet']['title'],
                     u'channelIconUrl': channel_item['snippet']['thumbnails']['high']['url'],
-                    u'eventType': video_item['snippet']['liveBroadcastContent']
+                    u'eventType': video_item['snippet']['liveBroadcastContent'],
+                    u'category': video_item['snippet']['categoryId']
                 }
             }
             return live_data
@@ -230,7 +232,8 @@ def create_data_format(video_item, channel_item, event_type):
                     u'channelId': video_item['snippet']['channelId'],
                     u'channelName': channel_item['snippet']['title'],
                     u'channelIconUrl': channel_item['snippet']['thumbnails']['high']['url'],
-                    u'eventType': video_item['snippet']['liveBroadcastContent']
+                    u'eventType': video_item['snippet']['liveBroadcastContent'],
+                    u'category': video_item['snippet']['categoryId']
                 }
             }
             return live_premium_data
@@ -244,7 +247,8 @@ def create_data_format(video_item, channel_item, event_type):
                 u'channelId': video_item['snippet']['channelId'],
                 u'channelName': channel_item['snippet']['title'],
                 u'channelIconUrl': channel_item['snippet']['thumbnails']['high']['url'],
-                u'eventType': video_item['snippet']['liveBroadcastContent']
+                u'eventType': video_item['snippet']['liveBroadcastContent'],
+                u'category': video_item['snippet']['categoryId']
             }
         }
         return upcoming_data
@@ -262,7 +266,8 @@ def create_data_format(video_item, channel_item, event_type):
                     u'channelName': channel_item['snippet']['title'],
                     u'channelIconUrl': channel_item['snippet']['thumbnails']['high']['url'],
                     u'eventType': video_item['snippet']['liveBroadcastContent'],
-                    u'duration': video_item['contentDetails']['duration']
+                    u'duration': video_item['contentDetails']['duration'],
+                    u'category': video_item['snippet']['categoryId']
                 }
             }
             return none_data
@@ -278,7 +283,8 @@ def create_data_format(video_item, channel_item, event_type):
                     u'channelId': video_item['snippet']['channelId'],
                     u'channelName': channel_item['snippet']['title'],
                     u'channelIconUrl': channel_item['snippet']['thumbnails']['high']['url'],
-                    u'eventType': video_item['snippet']['liveBroadcastContent']
+                    u'eventType': video_item['snippet']['liveBroadcastContent'],
+                    u'category': video_item['snippet']['categoryId']
                 }
             }
             return none_hide_data
@@ -322,3 +328,5 @@ def delete_video_item(db_id, rdb):
             print('delete', f'{d}')
             rdb.child(f'{d}').delete()
 
+
+main()
