@@ -1,3 +1,5 @@
+import re
+
 import firebase_admin
 import googleapiclient
 from firebase_admin import credentials
@@ -204,92 +206,140 @@ def get_db_id(rdb):
     return id_list
 
 
-def create_data_format(video_item, channel_item, event_type):
+# 動画のタグ付け
+def add_category_tag(video_title, video_category):
+    pattern_sing = 'sing|歌枠'
+    pattern_chat = 'chat|freetalk|雑談|スパチャ'
+    pattern_watch_along = 'WATCHALONG|同時視聴'
+    pattern_birthday = 'BIRTHDAY|生誕祭'
+    pattern_song = 'オリジナル曲|original song'
+    pattern_drawing = 'drawing'
+
+    results_sing = re.search(pattern_sing, video_title, re.IGNORECASE)
+    results_chat = re.search(pattern_chat, video_title, re.IGNORECASE)
+    results_watch_along = re.search(pattern_watch_along, video_title, re.IGNORECASE)
+    results_birthday = re.search(pattern_birthday, video_title, re.IGNORECASE)
+    results_song = re.search(pattern_song, video_title, re.IGNORECASE)
+    results_drawing = re.search(pattern_drawing, video_title, re.IGNORECASE)
+
+    if results_sing:
+        return 'sing'
+    elif results_chat:
+        return 'chat'
+    elif results_watch_along:
+        return 'watchAlong'
+    elif results_birthday:
+        return 'birthday'
+    elif results_song:
+        return 'song'
+    elif results_drawing:
+        return 'drawing'
+    elif video_category == '20':
+        return 'game'
+
+
+def create_data_format(video_item, channel_item, event_type, video_tag):
+    video_id = video_item['id']
+    video_title = video_item['snippet']['title']
+    thumbnail_url = video_item['snippet']['thumbnails']['high']['url']
+
+    channel_id = video_item['snippet']['channelId']
+    channel_name = channel_item['snippet']['title']
+    channel_icon_url = channel_item['snippet']['thumbnails']['high']['url']
+
     if event_type == 'live':
+        start_time = video_item['liveStreamingDetails']['actualStartTime']
+        current_viewers = video_item['liveStreamingDetails']['concurrentViewers']
         if 'concurrentViewers' in video_item['liveStreamingDetails']:
             live_data = {
-                video_item['id']: {
-                    u'title': video_item['snippet']['title'],
-                    u'thumbnailUrl': video_item['snippet']['thumbnails']['high']['url'],
-                    u'startTime': video_item['liveStreamingDetails']['actualStartTime'],
-                    u'currentViewers': video_item['liveStreamingDetails']['concurrentViewers'],
-                    u'channelId': video_item['snippet']['channelId'],
-                    u'channelName': channel_item['snippet']['title'],
-                    u'channelIconUrl': channel_item['snippet']['thumbnails']['high']['url'],
-                    u'eventType': video_item['snippet']['liveBroadcastContent'],
-                    u'category': video_item['snippet']['categoryId']
+                video_id: {
+                    u'title': video_title,
+                    u'thumbnailUrl': thumbnail_url,
+                    u'startTime': start_time,
+                    u'currentViewers': current_viewers,
+                    u'channelId': channel_id,
+                    u'channelName': channel_name,
+                    u'channelIconUrl': channel_icon_url,
+                    u'eventType': event_type,
+                    u'tag': video_tag
                 }
             }
             return live_data
         # プレミアム公開中の動画（視聴者数が取得できない）
         elif 'concurrentViewers' not in video_item['liveStreamingDetails']:
             live_premium_data = {
-                video_item['id']: {
-                    u'title': video_item['snippet']['title'],
-                    u'thumbnailUrl': video_item['snippet']['thumbnails']['high']['url'],
-                    u'startTime': video_item['liveStreamingDetails']['actualStartTime'],
+                video_id: {
+                    u'title': video_title,
+                    u'thumbnailUrl': thumbnail_url,
+                    u'startTime': start_time,
                     u'currentViewers': 'プレミアム公開中',
-                    u'channelId': video_item['snippet']['channelId'],
-                    u'channelName': channel_item['snippet']['title'],
-                    u'channelIconUrl': channel_item['snippet']['thumbnails']['high']['url'],
-                    u'eventType': video_item['snippet']['liveBroadcastContent'],
-                    u'category': video_item['snippet']['categoryId']
+                    u'channelId': channel_id,
+                    u'channelName': channel_name,
+                    u'channelIconUrl': channel_icon_url,
+                    u'eventType': event_type,
+                    u'tag': video_tag
                 }
             }
             return live_premium_data
 
     elif event_type == 'upcoming':
+        scheduled_start_time = video_item['liveStreamingDetails']['scheduledStartTime']
         upcoming_data = {
-            video_item['id']: {
-                u'title': video_item['snippet']['title'],
-                u'thumbnailUrl': video_item['snippet']['thumbnails']['high']['url'],
-                u'scheduledStartTime': video_item['liveStreamingDetails']['scheduledStartTime'],
-                u'channelId': video_item['snippet']['channelId'],
-                u'channelName': channel_item['snippet']['title'],
-                u'channelIconUrl': channel_item['snippet']['thumbnails']['high']['url'],
-                u'eventType': video_item['snippet']['liveBroadcastContent'],
-                u'category': video_item['snippet']['categoryId']
+            video_id: {
+                u'title': video_title,
+                u'thumbnailUrl': thumbnail_url,
+                u'scheduledStartTime': scheduled_start_time,
+                u'channelId': channel_id,
+                u'channelName': channel_name,
+                u'channelIconUrl': channel_icon_url,
+                u'eventType': event_type,
+                u'tag': video_tag
             }
         }
         return upcoming_data
 
     elif event_type == 'none':
+        published_at = video_item['snippet']['publishedAt']
+        view_count = video_item['statistics']['viewCount']
+        like_count = video_item['statistics']['likeCount']
+        duration = video_item['contentDetails']['duration']
         if 'likeCount' in video_item['statistics']:
             none_data = {
-                video_item['id']: {
-                    u'title': video_item['snippet']['title'],
-                    u'thumbnailUrl': video_item['snippet']['thumbnails']['high']['url'],
-                    u'publishedAt': video_item['snippet']['publishedAt'],
-                    u'viewCount': video_item['statistics']['viewCount'],
-                    u'likeCount': video_item['statistics']['likeCount'],
-                    u'channelId': video_item['snippet']['channelId'],
-                    u'channelName': channel_item['snippet']['title'],
-                    u'channelIconUrl': channel_item['snippet']['thumbnails']['high']['url'],
-                    u'eventType': video_item['snippet']['liveBroadcastContent'],
-                    u'duration': video_item['contentDetails']['duration'],
-                    u'category': video_item['snippet']['categoryId']
+                video_id: {
+                    u'title': video_title,
+                    u'thumbnailUrl': thumbnail_url,
+                    u'publishedAt': published_at,
+                    u'viewCount': view_count,
+                    u'likeCount': like_count,
+                    u'channelId': channel_id,
+                    u'channelName': channel_name,
+                    u'channelIconUrl': channel_icon_url,
+                    u'eventType': event_type,
+                    u'duration': duration,
+                    u'tag': video_tag
                 }
             }
             return none_data
         # 評価非表示の場合
         if 'likeCount' not in video_item['statistics']:
             none_hide_data = {
-                video_item['id']: {
-                    u'title': video_item['snippet']['title'],
-                    u'thumbnailUrl': video_item['snippet']['thumbnails']['high']['url'],
-                    u'publishedAt': video_item['snippet']['publishedAt'],
-                    u'viewCount': video_item['statistics']['viewCount'],
+                video_id: {
+                    u'title': video_title,
+                    u'thumbnailUrl': thumbnail_url,
+                    u'publishedAt': published_at,
+                    u'viewCount': view_count,
                     u'likeCount': 'None',
-                    u'channelId': video_item['snippet']['channelId'],
-                    u'channelName': channel_item['snippet']['title'],
-                    u'channelIconUrl': channel_item['snippet']['thumbnails']['high']['url'],
-                    u'eventType': video_item['snippet']['liveBroadcastContent'],
-                    u'category': video_item['snippet']['categoryId']
+                    u'channelId': channel_id,
+                    u'channelName': channel_id,
+                    u'channelIconUrl': channel_icon_url,
+                    u'eventType': event_type,
+                    u'tag': video_tag
                 }
             }
             return none_hide_data
 
 
+# RealtimeDatabaseに書き込み
 def add_video_item(id_list, rdb, channel_id, youtube):
     print('add_video_item')
     try:
@@ -300,16 +350,10 @@ def add_video_item(id_list, rdb, channel_id, youtube):
         for single_Video in video_item:
             # print('videoID', single_Video['id'])
             event_type = single_Video['snippet']['liveBroadcastContent']
+            video_tag = add_category_tag(single_Video['snippet']['title'], single_Video['snippet']['categoryId'])
 
-            # FirestoreのドキュメントIDとXmlから取得したIDを比較
-            # 一致していれば一部の要素を更新
-            if single_Video['id'] in id_list:
-                update_item = create_data_format(single_Video, channel_item, event_type)
-                rdb.update(update_item)
-            # 不一致だった場合追加
-            else:
-                update_item = create_data_format(single_Video, channel_item, event_type)
-                rdb.update(update_item)
+            update_item = create_data_format(single_Video, channel_item, event_type, video_tag)
+            rdb.update(update_item)
 
     except TypeError as e:
         print(e)
