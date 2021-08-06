@@ -36,4 +36,3 @@ setuptools==56.0.0
 six==1.15.0
 uritemplate==3.0.1
 urllib3==1.26.4
-

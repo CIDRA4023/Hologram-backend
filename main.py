@@ -208,12 +208,15 @@ def get_db_id(rdb):
 
 # 動画のタグ付け
 def add_category_tag(video_title, video_category):
-    pattern_sing = 'sing|歌枠'
-    pattern_chat = 'chat|freetalk|雑談|スパチャ'
+    pattern_sing = 'sing|歌枠|KARAOKE'
+    pattern_chat = 'chat|freetalk|supa|雑談|スパチャ'
     pattern_watch_along = 'WATCHALONG|同時視聴'
     pattern_birthday = 'BIRTHDAY|生誕祭'
     pattern_song = 'オリジナル曲|original song'
     pattern_drawing = 'drawing'
+    pattern_live = 'LIVE'
+    pattern_cover = '歌ってみた|cover'
+    pattern_asmr = 'ASMR|A　S　M　R'
 
     results_sing = re.search(pattern_sing, video_title, re.IGNORECASE)
     results_chat = re.search(pattern_chat, video_title, re.IGNORECASE)
@@ -221,6 +224,9 @@ def add_category_tag(video_title, video_category):
     results_birthday = re.search(pattern_birthday, video_title, re.IGNORECASE)
     results_song = re.search(pattern_song, video_title, re.IGNORECASE)
     results_drawing = re.search(pattern_drawing, video_title, re.IGNORECASE)
+    results_live = re.search(pattern_live, video_title)
+    results_cover = re.search(pattern_cover, video_title)
+    results_asmr = re.search(pattern_asmr, video_title, re.IGNORECASE)
 
     if results_sing:
         return 'sing'
@@ -236,9 +242,42 @@ def add_category_tag(video_title, video_category):
         return 'drawing'
     elif video_category == '20':
         return 'game'
+    elif results_live:
+        return 'live'
+    elif results_cover:
+        return 'cover'
+    elif results_asmr:
+        return 'ASMR'
 
 
-def create_data_format(video_item, channel_item, event_type, video_tag):
+def add_member_tag(desc, channel_id, youtube):
+    pattern_all_mem = "ときのそら|AZKi|ロボ子|さくらみこ|白上フブキ|夏色まつり|夜空メル|赤井はあと|" \
+                      "アキ・ローゼンタール|湊あくあ|癒月ちょこ|百鬼あやめ|紫咲シオン|大空スバル|大神ミオ" \
+                      "|猫又おかゆ|戌神ころね|不知火フレア|白銀ノエル|宝鐘マリン|兎田ぺこら|潤羽るしあ|星街すいせい" \
+                      "|天音かなた|桐生ココ|角巻わため|常闇トワ|姫森ルーナ|雪花ラミィ|桃鈴ねね|獅白ぼたん|尾丸ポルカ" \
+                      "|IOFI|MOONA|ムーナ|Risu|Ollie|Anya|Reine|Calliope|Kiara|Ina'nis|Gura|Amelia|IRyS|hololive ホロライブ"
+    # すいちゃｎ
+    pattern_split = "Don't forget to follow and subscribe to my sisters!|" \
+                    "Don't forget to follow Ollie's sisters!!!|" \
+                    "Mohon bantuannya ya, untuk teman seperjuangannya Iofi~!|" \
+                    "~ Hololive Indonesia ~|Support the other holoID gen 2 girls!|holoID!!|" \
+                    "｡.｡:|＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝|『百花繚乱花吹雪』|◆2020.12.29『曇天羊／角巻わため"
+
+    if re.search(pattern_split, desc):
+        split_desc = re.split(pattern_split, desc)[0]
+        tag_all_mem = re.findall(pattern_all_mem, split_desc)
+    else:
+        tag_all_mem = re.findall(pattern_all_mem, desc)
+
+    channel_name = get_items_channel(channel_id, youtube)['snippet']['title']
+    print(channel_name)
+    result_channel_name = re.findall(pattern_all_mem, channel_name, re.IGNORECASE)
+    tag_all_mem.extend(result_channel_name)
+    return ",".join(set(tag_all_mem))
+    # print(",".join(set(tag_all_mem)))
+
+
+def create_data_format(video_item, channel_item, event_type, tag_category, tag_member, tag_platform):
     video_id = video_item['id']
     video_title = video_item['snippet']['title']
     thumbnail_url = video_item['snippet']['thumbnails']['high']['url']
@@ -261,7 +300,11 @@ def create_data_format(video_item, channel_item, event_type, video_tag):
                     u'channelName': channel_name,
                     u'channelIconUrl': channel_icon_url,
                     u'eventType': event_type,
-                    u'tag': video_tag
+                    u'tag': {
+                        'category': tag_category,
+                        'member': tag_member,
+                        'platform': tag_platform
+                    }
                 }
             }
             return live_data
@@ -277,7 +320,11 @@ def create_data_format(video_item, channel_item, event_type, video_tag):
                     u'channelName': channel_name,
                     u'channelIconUrl': channel_icon_url,
                     u'eventType': event_type,
-                    u'tag': video_tag
+                    u'tag': {
+                        'category': tag_category,
+                        'member': tag_member,
+                        'platform': tag_platform
+                    }
                 }
             }
             return live_premium_data
@@ -293,7 +340,11 @@ def create_data_format(video_item, channel_item, event_type, video_tag):
                 u'channelName': channel_name,
                 u'channelIconUrl': channel_icon_url,
                 u'eventType': event_type,
-                u'tag': video_tag
+                u'tag': {
+                    'category': tag_category,
+                    'member': tag_member,
+                    'platform': tag_platform
+                }
             }
         }
         return upcoming_data
@@ -316,7 +367,11 @@ def create_data_format(video_item, channel_item, event_type, video_tag):
                     u'channelIconUrl': channel_icon_url,
                     u'eventType': event_type,
                     u'duration': duration,
-                    u'tag': video_tag
+                    u'tag': {
+                        'category': tag_category,
+                        'member': tag_member,
+                        'platform': tag_platform
+                    }
                 }
             }
             return none_data
@@ -333,7 +388,11 @@ def create_data_format(video_item, channel_item, event_type, video_tag):
                     u'channelName': channel_id,
                     u'channelIconUrl': channel_icon_url,
                     u'eventType': event_type,
-                    u'tag': video_tag
+                    u'tag': {
+                        'category': tag_category,
+                        'member': tag_member,
+                        'platform': tag_platform
+                    }
                 }
             }
             return none_hide_data
@@ -350,9 +409,12 @@ def add_video_item(id_list, rdb, channel_id, youtube):
         for single_Video in video_item:
             # print('videoID', single_Video['id'])
             event_type = single_Video['snippet']['liveBroadcastContent']
-            video_tag = add_category_tag(single_Video['snippet']['title'], single_Video['snippet']['categoryId'])
+            tag_category = add_category_tag(single_Video['snippet']['title'], single_Video['snippet']['categoryId'])
+            tag_member = add_member_tag(single_Video['snippet']['description'], channel_id, youtube)
+            tag_platform = 'youtube'
 
-            update_item = create_data_format(single_Video, channel_item, event_type, video_tag)
+            update_item = create_data_format(single_Video, channel_item, event_type, tag_category, tag_member,
+                                             tag_platform)
             rdb.update(update_item)
 
     except TypeError as e:
