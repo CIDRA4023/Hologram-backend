@@ -288,8 +288,9 @@ def create_data_format(video_item, channel_item, event_type, tag_category, tag_m
 
     if event_type == 'live':
         start_time = video_item['liveStreamingDetails']['actualStartTime']
-        current_viewers = video_item['liveStreamingDetails']['concurrentViewers']
+
         if 'concurrentViewers' in video_item['liveStreamingDetails']:
+            current_viewers = video_item['liveStreamingDetails']['concurrentViewers']
             live_data = {
                 video_id: {
                     u'title': video_title,
@@ -352,9 +353,10 @@ def create_data_format(video_item, channel_item, event_type, tag_category, tag_m
     elif event_type == 'none':
         published_at = video_item['snippet']['publishedAt']
         view_count = video_item['statistics']['viewCount']
-        like_count = video_item['statistics']['likeCount']
+
         duration = video_item['contentDetails']['duration']
         if 'likeCount' in video_item['statistics']:
+            like_count = video_item['statistics']['likeCount']
             none_data = {
                 video_id: {
                     u'title': video_title,
@@ -407,7 +409,7 @@ def add_video_item(id_list, rdb, channel_id, youtube):
 
         # YouTubeAPIを使って取得したアイテムをFirestoreに追加
         for single_Video in video_item:
-            # print('videoID', single_Video['id'])
+            print('videoID', single_Video['id'])
             event_type = single_Video['snippet']['liveBroadcastContent']
             tag_category = add_category_tag(single_Video['snippet']['title'], single_Video['snippet']['categoryId'])
             tag_member = add_member_tag(single_Video['snippet']['description'], channel_id, youtube)
