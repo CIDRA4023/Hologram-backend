@@ -252,8 +252,8 @@ def add_category_tag(video_title, video_category):
 
 def add_member_tag(desc, channel_id, youtube):
     pattern_all_mem = "ときのそら|AZKi|ロボ子|さくらみこ|白上フブキ|夏色まつり|夜空メル|赤井はあと|" \
-                      "アキ・ローゼンタール|湊あくあ|癒月ちょこ|百鬼あやめ|紫咲シオン|大空スバル|大神ミオ" \
-                      "|猫又おかゆ|戌神ころね|不知火フレア|白銀ノエル|宝鐘マリン|兎田ぺこら|潤羽るしあ|星街すいせい" \
+                      "アキ・ローゼンタール|アキロゼ|湊あくあ|癒月ちょこ|百鬼あやめ|紫咲シオン|大空スバル|大神ミオ" \
+                      "|猫又おかゆ|戌神ころね|不知火フレア|白銀ノエル|宝鐘マリン|兎田ぺこら|潤羽るしあ|星街すいせい|Suisei" \
                       "|天音かなた|桐生ココ|角巻わため|常闇トワ|姫森ルーナ|雪花ラミィ|桃鈴ねね|獅白ぼたん|尾丸ポルカ" \
                       "|IOFI|MOONA|ムーナ|Risu|Ollie|Anya|Reine|Calliope|Kiara|Ina'nis|Gura|Amelia|IRyS|hololive ホロライブ"
     # すいちゃｎ
@@ -261,7 +261,8 @@ def add_member_tag(desc, channel_id, youtube):
                     "Don't forget to follow Ollie's sisters!!!|" \
                     "Mohon bantuannya ya, untuk teman seperjuangannya Iofi~!|" \
                     "~ Hololive Indonesia ~|Support the other holoID gen 2 girls!|holoID!!|" \
-                    "｡.｡:|＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝|『百花繚乱花吹雪』|◆2020.12.29『曇天羊／角巻わため"
+                    "｡.｡:|＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝|『百花繚乱花吹雪』|◆2020.12.29『曇天羊／角巻わため" \
+                    "Relay"
 
     if re.search(pattern_split, desc):
         split_desc = re.split(pattern_split, desc)[0]
