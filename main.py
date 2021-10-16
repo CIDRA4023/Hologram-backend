@@ -88,7 +88,22 @@ def main():
         'UChgTyjG-pdNvxxhdsXfHQ5Q',
         'UCYz_5n-uDuChHtLo7My1HnQ',
         'UC727SQYUvx5pDDGQpTICNWg',
-        'UC8rcEBzJSleTkf_-agPM20g'
+        'UC8rcEBzJSleTkf_-agPM20g',
+
+        'UC6t3-_N8A6ME1JShZHHqOMw',
+        'UCZgOv3YDEs-ZnZWDYVwJdmA',
+        'UCKeAhJvy8zgXWbh9duVjIaQ',
+        'UC9mf_ZVpouoILRY9NUIaK-w',
+        'UCNVEsYbiZjH5QLmGeSgTSzg',
+        'UCGNI4MENvnsymYjKiZwv9eg',
+        'UCANDOlYTJT7N5jlRC3zfzVA',
+        'UChSvpZYRPh0FvG4SJGSga3g',
+        'UCwL7dgTxKo8Y4RFIKWaf8gA',
+        'UCsUj0dszADCGbF3gNrQEuSQ',
+        'UCO_aKKYxn4tvrqPjcTzZ6EQ',
+        'UCmbs8T6MWqUHP1tIQvSgKrg',
+        'UC3n5uGu18FoCy23ggWWp8tA',
+        'UCgmPnx-EEeOrZSg5Tiw7ZRQ'
     ]
 
     # DB上のアイテムを読み込み
@@ -209,14 +224,16 @@ def get_db_id(rdb):
 # 動画のタグ付け
 def add_category_tag(video_title, video_category):
     pattern_sing = 'sing|歌枠|KARAOKE'
-    pattern_chat = 'chat|freetalk|supa|雑談|スパチャ'
-    pattern_watch_along = 'WATCHALONG|同時視聴'
+    pattern_chat = 'chat|freetalk|supa|雑談|スパチャ|スーパーチャット|Donation Reading'
+    pattern_watch_along = 'WATCHALONG|同時視聴|WATCH-A-LONG'
     pattern_birthday = 'BIRTHDAY|生誕祭'
-    pattern_song = 'オリジナル曲|original song'
+    pattern_song = 'オリジナル曲|original song|original'
     pattern_drawing = 'drawing'
     pattern_live = 'LIVE'
     pattern_cover = '歌ってみた|cover'
     pattern_asmr = 'ASMR|A　S　M　R'
+    pattern_cooking = 'Cooking'
+    pattern_membership = 'メン限|member'
 
     results_sing = re.search(pattern_sing, video_title, re.IGNORECASE)
     results_chat = re.search(pattern_chat, video_title, re.IGNORECASE)
@@ -227,6 +244,8 @@ def add_category_tag(video_title, video_category):
     results_live = re.search(pattern_live, video_title)
     results_cover = re.search(pattern_cover, video_title)
     results_asmr = re.search(pattern_asmr, video_title, re.IGNORECASE)
+    results_cooking = re.search(pattern_cooking, video_title)
+    results_membership = re.search(pattern_membership, video_title, re.IGNORECASE)
 
     if results_sing:
         return 'sing'
@@ -248,6 +267,10 @@ def add_category_tag(video_title, video_category):
         return 'cover'
     elif results_asmr:
         return 'ASMR'
+    elif results_cooking:
+        return 'cooking'
+    elif results_membership:
+        return 'membership'
 
 
 def add_member_tag(desc, channel_id, youtube):
@@ -255,15 +278,27 @@ def add_member_tag(desc, channel_id, youtube):
                       "アキ・ローゼンタール|アキロゼ|湊あくあ|癒月ちょこ|百鬼あやめ|紫咲シオン|大空スバル|大神ミオ" \
                       "|猫又おかゆ|戌神ころね|不知火フレア|白銀ノエル|宝鐘マリン|兎田ぺこら|潤羽るしあ|星街すいせい|Suisei" \
                       "|天音かなた|桐生ココ|角巻わため|常闇トワ|姫森ルーナ|雪花ラミィ|桃鈴ねね|獅白ぼたん|尾丸ポルカ" \
-                      "|IOFI|MOONA|ムーナ|Risu|Ollie|Anya|Reine|Calliope|Kiara|Ina'nis|Gura|Amelia|IRyS|hololive ホロライブ"
-    # すいちゃｎ
+                      "|IOFI|MOONA|ムーナ|Risu|Ollie|Anya|Reine|" \
+                      "Calliope|Kiara|Ina'nis|Gura|Amelia|IRyS|" \
+                      "hololive ホロライブ |" \
+                      "Sana|Fauna|Kronii|Mumei|Baelz|" \
+                      "花咲みやび|奏手イヅル|アルランディス|律可|アステル|岸堂天真|夕刻ロベル|影山シエン|荒咬オウガ"
+
     pattern_split = "Don't forget to follow and subscribe to my sisters!|" \
                     "Don't forget to follow Ollie's sisters!!!|" \
                     "Mohon bantuannya ya, untuk teman seperjuangannya Iofi~!|" \
                     "~ Hololive Indonesia ~|Support the other holoID gen 2 girls!|holoID!!|" \
-                    "｡.｡:|＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝|『百花繚乱花吹雪』|◆2020.12.29『曇天羊／角巻わため" \
-                    "Relay"
+                    "｡.｡:|＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝|『百花繚乱花吹雪』|◆2020.12.29『曇天羊／角巻わため|" \
+                    "Relay|ーーーーーーーーーーーーーーーーーーー|" \
+                    "ーーー▼花咲みやびのがいよう▼ーーー|【ホロスターズ1期生】|▼△▼|【お知らせ】|ーーー|----------|【ホロスターズ1期生の先輩たち】|" \
+                    "★★★|✧✧✧|----------------------|≫ ──── ≪•◦ ❈ ◦•≫ ──── ≪|««-------------- ≪ °◇◆◇° ≫ --------------»»"
 
+    """
+    概要欄から正規表現に一致するものがあれば分割し、
+    その中からチャンネル名に一致するものを検索
+
+    一致しない場合はそのまま概要欄からチャンネル名に一致するものを検索
+    """
     if re.search(pattern_split, desc):
         split_desc = re.split(pattern_split, desc)[0]
         tag_all_mem = re.findall(pattern_all_mem, split_desc)
@@ -272,13 +307,54 @@ def add_member_tag(desc, channel_id, youtube):
 
     channel_name = get_items_channel(channel_id, youtube)['snippet']['title']
     print(channel_name)
+    # 配信、投稿動画のチャンネル名をパターンに一致するものを検索しタグに追加
     result_channel_name = re.findall(pattern_all_mem, channel_name, re.IGNORECASE)
     tag_all_mem.extend(result_channel_name)
+
+    # チャンネル名に一致したものと概要欄の中から一致したチャンネル名の2つが含まれていた場合いづれかを削除
+    if {'星街すいせい', 'Suisei'} <= set(tag_all_mem):
+        tag_all_mem.remove('星街すいせい')
+    elif {'IOFI', 'Iofi'} <= set(tag_all_mem):
+        tag_all_mem.remove('IOFI')
+    else:
+        pass
+
     return ",".join(set(tag_all_mem))
     # print(",".join(set(tag_all_mem)))
 
 
-def create_data_format(video_item, channel_item, event_type, tag_category, tag_member, tag_platform):
+def add_group_tag(channel_id, youtube):
+    holo_Jp = 'holoJp'
+    holo_En = 'holoEn'
+    holo_Id = 'holoId'
+    holo_stars = 'holoStars'
+
+    pattern_holo_jp = "ときのそら|AZKi|ロボ子|さくらみこ|白上フブキ|夏色まつり|夜空メル|赤井はあと|" \
+                      "アキ・ローゼンタール|アキロゼ|湊あくあ|癒月ちょこ|百鬼あやめ|紫咲シオン|大空スバル|大神ミオ" \
+                      "|猫又おかゆ|戌神ころね|不知火フレア|白銀ノエル|宝鐘マリン|兎田ぺこら|潤羽るしあ|Suisei" \
+                      "|天音かなた|桐生ココ|角巻わため|常闇トワ|姫森ルーナ|雪花ラミィ|桃鈴ねね|獅白ぼたん|尾丸ポルカ"
+
+    pattern_holo_en = "Calliope|Kiara|Ina'nis|Gura|Amelia|IRyS|Sana|Fauna|Kronii|Mumei|Baelz"
+
+    pattern_holo_id = "Iofi|Moona|Risu|Ollie|Anya|Reine"
+
+    pattern_holo_stars = "花咲みやび|奏手イヅル|アルランディス|律可|アステル|岸堂天真|夕刻ロベル|影山シエン|荒咬オウガ"
+
+    channel_name = get_items_channel(channel_id, youtube)['snippet']['title']
+
+    if re.search(pattern_holo_jp, channel_name):
+        return holo_Jp
+    elif re.search(pattern_holo_en, channel_name):
+        return holo_En
+    elif re.search(pattern_holo_id, channel_name):
+        return holo_Id
+    elif re.search(pattern_holo_stars, channel_name):
+        return holo_stars
+    else:
+        return 'none'
+
+
+def create_data_format(video_item, channel_item, event_type, tag_category, tag_member, tag_group, tag_platform):
     video_id = video_item['id']
     video_title = video_item['snippet']['title']
     thumbnail_url = video_item['snippet']['thumbnails']['high']['url']
@@ -305,6 +381,7 @@ def create_data_format(video_item, channel_item, event_type, tag_category, tag_m
                     u'tag': {
                         'category': tag_category,
                         'member': tag_member,
+                        'group': tag_group,
                         'platform': tag_platform
                     }
                 }
@@ -325,6 +402,7 @@ def create_data_format(video_item, channel_item, event_type, tag_category, tag_m
                     u'tag': {
                         'category': tag_category,
                         'member': tag_member,
+                        'group': tag_group,
                         'platform': tag_platform
                     }
                 }
@@ -345,6 +423,7 @@ def create_data_format(video_item, channel_item, event_type, tag_category, tag_m
                 u'tag': {
                     'category': tag_category,
                     'member': tag_member,
+                    'group': tag_group,
                     'platform': tag_platform
                 }
             }
@@ -373,6 +452,7 @@ def create_data_format(video_item, channel_item, event_type, tag_category, tag_m
                     u'tag': {
                         'category': tag_category,
                         'member': tag_member,
+                        'group': tag_group,
                         'platform': tag_platform
                     }
                 }
@@ -394,6 +474,7 @@ def create_data_format(video_item, channel_item, event_type, tag_category, tag_m
                     u'tag': {
                         'category': tag_category,
                         'member': tag_member,
+                        'group': tag_group,
                         'platform': tag_platform
                     }
                 }
@@ -414,10 +495,11 @@ def add_video_item(id_list, rdb, channel_id, youtube):
             event_type = single_Video['snippet']['liveBroadcastContent']
             tag_category = add_category_tag(single_Video['snippet']['title'], single_Video['snippet']['categoryId'])
             tag_member = add_member_tag(single_Video['snippet']['description'], channel_id, youtube)
+            tag_group = add_group_tag(channel_id, youtube)
             tag_platform = 'youtube'
 
             update_item = create_data_format(single_Video, channel_item, event_type, tag_category, tag_member,
-                                             tag_platform)
+                                             tag_group, tag_platform)
             rdb.update(update_item)
 
     except TypeError as e:
