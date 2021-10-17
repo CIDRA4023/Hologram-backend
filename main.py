@@ -28,7 +28,7 @@ def main():
     dotenv_path = join(dirname(__file__), '.env')
     load_dotenv(dotenv_path)
     DATABASE_URL = os.environ.get("DATABASE_URL")
-    YOUTUBE_API_KEY = os.environ.get("YOUTUBE_KEY")
+    # YOUTUBE_API_KEY = os.environ.get("YOUTUBE_KEY")
 
     if not firebase_admin._apps:
         print('初期化')
@@ -39,9 +39,9 @@ def main():
         })
 
     ref_db = db.reference('/video')
-
-    YOUTUBE_API_KEY = YOUTUBE_API_KEY
-    youtube = build('youtube', 'v3', developerKey=YOUTUBE_API_KEY)
+    # 
+    # YOUTUBE_API_KEY = YOUTUBE_API_KEY
+    # youtube = build('youtube', 'v3', developerKey=YOUTUBE_API_KEY)
 
     # チャンネルIDリスト
 
