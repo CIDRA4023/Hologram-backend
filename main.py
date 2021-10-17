@@ -15,7 +15,9 @@ import os
 from os.path import join, dirname
 from dotenv import load_dotenv
 
-xml_video_id = []
+from XmlParser import XmlParser
+
+# xml_video_id = []
 error_channel_id = []
 
 
@@ -47,78 +49,86 @@ def main():
         'UCp6993wxpyDPHUpavwDFqgg',
         'UC0TXe_LYZ4scaW2XMyi5_kw',
         'UCDqI2jOz0weumE8s7paEk6g',
-        'UC-hM6YJuNYVAmUWxeIr9FeA',
-        'UCdn5BQ06XqgXoAxIhbqw5Rg',
-        'UCQ0UDLQCjY0rmuxCDE38FGg',
-        'UCD8HOxPs4Xvsm8H0ZxXGiBw',
-        'UC1CfXB_kRs3C-zaeTG3oGyg',
-        'UCFTLzh12_nrtzqBPsTCqenA',
-        'UC1opHUrw8rvnsadT-iGp7Cg',
-        'UC1suqwovbL1kzsoaZgFZLKg',
-        'UC7fk0CB07ly8oSl0aqKkqFg',
-        'UCXTpFs_3PqI41qX2d9tL2Rw',
-        'UCvzGlP9oQwU--Y0r9id_jnA',
-        'UCp-5t9SrOQwXMU7iIjQfARg',
-        'UCvaTdHTWBGv3MKj3KVqJVCw',
-        'UChAnqc_AY5_I3Px5dig3X1Q',
-        'UCvInZx9h3jC2JzsIzoOebWg',
-        'UCdyqAaZDKHXg4Ahi7VENThQ',
-        'UCCzUftO8KOVkV4wQG1vkUvg',
-        'UC1DCedRgGHBdm81E1llLhOQ',
-        'UCl_gCybOJRIgOXw6Qb4qJzQ',
-        'UC5CwaMl1eIgY8h02uZw7u8A',
-        'UCZlDXzGoo7d44bwdNObFacg',
-        'UCS9uQI-jC3DE0L4IpXyvr6w',
-        'UCqm3BQLlJfvkTsX_hvm0UmA',
-        'UC1uv2Oq6kNxgATlCiez59hw',
-        'UCa9Y57gfeY0Zro_noHRVrnw',
-        'UCFKOVgVbGmX65RxO3EtH3iw',
-        'UCAWSyEs_Io8MtpY3m-zqILA',
-        'UCUKD-uaobj9jiqB-VXt71mA',
-        'UCK9V2B22uJYu3N7eR_BT9QA',
-        'UCJFZiqLMntJufDCHc6bQixg',
-        'UCL_qhgtOy0dy1Agp8vkySQg',
-        'UCHsx4Hqa-1ORjQTh9TYDhww',
-        'UCyl1z3jo3XHR1riLFKG5UAg',
-        'UCoSrY_IQQVpmIRZ9Xf-y93g',
-        'UCMwGHR0BTZuLsmjY_NT5Pwg',
-        'UCAoy6rzhSf4ydcYjJw3WoVg',
-        'UCOyYb1c43VlX9rc_lT6NKQw',
-        'UCP0BspO_AMEe3aQqqpo89Dg',
-        'UChgTyjG-pdNvxxhdsXfHQ5Q',
-        'UCYz_5n-uDuChHtLo7My1HnQ',
-        'UC727SQYUvx5pDDGQpTICNWg',
-        'UC8rcEBzJSleTkf_-agPM20g',
-
-        'UC6t3-_N8A6ME1JShZHHqOMw',
-        'UCZgOv3YDEs-ZnZWDYVwJdmA',
-        'UCKeAhJvy8zgXWbh9duVjIaQ',
-        'UC9mf_ZVpouoILRY9NUIaK-w',
-        'UCNVEsYbiZjH5QLmGeSgTSzg',
-        'UCGNI4MENvnsymYjKiZwv9eg',
-        'UCANDOlYTJT7N5jlRC3zfzVA',
-        'UChSvpZYRPh0FvG4SJGSga3g',
-        'UCwL7dgTxKo8Y4RFIKWaf8gA',
-        'UCsUj0dszADCGbF3gNrQEuSQ',
-        'UCO_aKKYxn4tvrqPjcTzZ6EQ',
-        'UCmbs8T6MWqUHP1tIQvSgKrg',
-        'UC3n5uGu18FoCy23ggWWp8tA',
-        'UCgmPnx-EEeOrZSg5Tiw7ZRQ'
+        # 'UC-hM6YJuNYVAmUWxeIr9FeA',
+        # 'UCdn5BQ06XqgXoAxIhbqw5Rg',
+        # 'UCQ0UDLQCjY0rmuxCDE38FGg',
+        # 'UCD8HOxPs4Xvsm8H0ZxXGiBw',
+        # 'UC1CfXB_kRs3C-zaeTG3oGyg',
+        # 'UCFTLzh12_nrtzqBPsTCqenA',
+        # 'UC1opHUrw8rvnsadT-iGp7Cg',
+        # 'UC1suqwovbL1kzsoaZgFZLKg',
+        # 'UC7fk0CB07ly8oSl0aqKkqFg',
+        # 'UCXTpFs_3PqI41qX2d9tL2Rw',
+        # 'UCvzGlP9oQwU--Y0r9id_jnA',
+        # 'UCp-5t9SrOQwXMU7iIjQfARg',
+        # 'UCvaTdHTWBGv3MKj3KVqJVCw',
+        # 'UChAnqc_AY5_I3Px5dig3X1Q',
+        # 'UCvInZx9h3jC2JzsIzoOebWg',
+        # 'UCdyqAaZDKHXg4Ahi7VENThQ',
+        # 'UCCzUftO8KOVkV4wQG1vkUvg',
+        # 'UC1DCedRgGHBdm81E1llLhOQ',
+        # 'UCl_gCybOJRIgOXw6Qb4qJzQ',
+        # 'UC5CwaMl1eIgY8h02uZw7u8A',
+        # 'UCZlDXzGoo7d44bwdNObFacg',
+        # 'UCS9uQI-jC3DE0L4IpXyvr6w',
+        # 'UCqm3BQLlJfvkTsX_hvm0UmA',
+        # 'UC1uv2Oq6kNxgATlCiez59hw',
+        # 'UCa9Y57gfeY0Zro_noHRVrnw',
+        # 'UCFKOVgVbGmX65RxO3EtH3iw',
+        # 'UCAWSyEs_Io8MtpY3m-zqILA',
+        # 'UCUKD-uaobj9jiqB-VXt71mA',
+        # 'UCK9V2B22uJYu3N7eR_BT9QA',
+        # 'UCJFZiqLMntJufDCHc6bQixg',
+        # 'UCL_qhgtOy0dy1Agp8vkySQg',
+        # 'UCHsx4Hqa-1ORjQTh9TYDhww',
+        # 'UCyl1z3jo3XHR1riLFKG5UAg',
+        # 'UCoSrY_IQQVpmIRZ9Xf-y93g',
+        # 'UCMwGHR0BTZuLsmjY_NT5Pwg',
+        # 'UCAoy6rzhSf4ydcYjJw3WoVg',
+        # 'UCOyYb1c43VlX9rc_lT6NKQw',
+        # 'UCP0BspO_AMEe3aQqqpo89Dg',
+        # 'UChgTyjG-pdNvxxhdsXfHQ5Q',
+        # 'UCYz_5n-uDuChHtLo7My1HnQ',
+        # 'UC727SQYUvx5pDDGQpTICNWg',
+        # 'UC8rcEBzJSleTkf_-agPM20g',
+        #
+        # 'UC6t3-_N8A6ME1JShZHHqOMw',
+        # 'UCZgOv3YDEs-ZnZWDYVwJdmA',
+        # 'UCKeAhJvy8zgXWbh9duVjIaQ',
+        # 'UC9mf_ZVpouoILRY9NUIaK-w',
+        # 'UCNVEsYbiZjH5QLmGeSgTSzg',
+        # 'UCGNI4MENvnsymYjKiZwv9eg',
+        # 'UCANDOlYTJT7N5jlRC3zfzVA',
+        # 'UChSvpZYRPh0FvG4SJGSga3g',
+        # 'UCwL7dgTxKo8Y4RFIKWaf8gA',
+        # 'UCsUj0dszADCGbF3gNrQEuSQ',
+        # 'UCO_aKKYxn4tvrqPjcTzZ6EQ',
+        # 'UCmbs8T6MWqUHP1tIQvSgKrg',
+        # 'UC3n5uGu18FoCy23ggWWp8tA',
+        # 'UCgmPnx-EEeOrZSg5Tiw7ZRQ'
     ]
 
     # DB上のアイテムを読み込み
     db_id = get_db_id(ref_db)
 
     # 各チャンネルIDごとにXMLparseからDB追加までの処理を実行
-    for channel_id in channelIdList:
-        add_video_item(db_id, ref_db, channel_id, youtube)
+    for single_channel_id in channelIdList:
+        # XmlParserから今週アップロードされた動画を取得
+        xml_parse = XmlParser(channel_id=single_channel_id)
+        xml_video_id = xml_parse.parse_xml()
 
-    delete_video_item(db_id, ref_db)
+        add_video_item(db_id, ref_db, single_channel_id, youtube, xml_video_id)
 
-    xml_video_id.clear()
+    # delete_video_item(db_id, ref_db)
 
+    # リストに格納したリストデータを削除
+    xml_video_id_list = XmlParser.xml_video_id_list
+
+    xml_video_id_list.clear()
+    print(len(xml_video_id_list))
+    print(XmlParser.error_channel_id_list)
     # delete_items_last_week(ref_db)
-    print(len(xml_video_id))
+
     # 処理後の時刻
     t2 = time.time()
 
@@ -127,61 +137,15 @@ def main():
     print(f"経過時間：{elapsed_time}")
 
 
-def parse_xml(channel_id):
-    rssUrl = f'https://www.youtube.com/feeds/videos.xml?channel_id={channel_id}'
-    headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; Win64; x64)'}
-    req = urllib.request.Request(rssUrl, None, headers)
-    print('parse_xml')
-    try:
-        with urllib.request.urlopen(req) as response:
-            # UrlからXmlデータを取得しrootへ格納
-            xmlData = response.read()
-            root = ET.fromstring(xmlData)
-            video_id_list = []
-            last_week = get_last_week_date()
-
-            # entryタグ内のvideoIDとpublishedAtを取得
-            for r in root.findall('{http://www.w3.org/2005/Atom}entry'):
-
-                vid = r[1].text
-                published = r[6].text
-                # 投稿時間が先週よりも前ならループ抜ける
-                if published < last_week:
-                    break
-                video_id_list.append(vid)
-                xml_video_id.append(vid)
-
-            # 取得したvideoIdをカンマ区切り文字列にする
-        videoIdList_str = ",".join(video_id_list)
-        return videoIdList_str
-
-    except urllib.error.HTTPError as e:
-        print('HTTPError', channel_id, e.code)
-        error_channel_id.append(channel_id)
-    except urllib.error.URLError as e:
-        print('URLError', channel_id, e.reason)
-        error_channel_id.append(channel_id)
-
-
-def get_last_week_date():
-    # 現在のイギリス時間を取得
-    utc_date = datetime.now(timezone.utc)
-    # 一週間前のイギリス時間を取得
-    utc_date_last_week = utc_date - relativedelta(weeks=1)
-    # 一週間前のイギリス時間を%Y-%m-%dT%H:%M:%SZ形式の文字列に変換
-    utc_date_last_week_format = utc_date_last_week.strftime('%Y-%m-%dT%H:%M:%SZ')
-
-    return utc_date_last_week_format
-
-
 # Videoアイテムの取得
-def get_items_video(channel_id, youtube):
+def get_items_video(channel_id, youtube, xml_video_id):
     print('get_items_video')
     # クォータ使い切った時とJSONを返却されなかったときの例外処理
+    print(f'{xml_video_id}')
     try:
         video_items = youtube.videos().list(
             part='snippet,liveStreamingDetails,statistics,contentDetails',
-            id=f'{parse_xml(channel_id)}',
+            id=f'{xml_video_id}',
         ).execute()
         return video_items
     except googleapiclient.errors.HttpError as e:
@@ -483,15 +447,16 @@ def create_data_format(video_item, channel_item, event_type, tag_category, tag_m
 
 
 # RealtimeDatabaseに書き込み
-def add_video_item(id_list, rdb, channel_id, youtube):
+def add_video_item(id_list, rdb, channel_id, youtube, xml_video_id):
     print('add_video_item')
     try:
-        video_item = get_items_video(channel_id, youtube)['items']
+        video_item = get_items_video(channel_id, youtube, xml_video_id)['items']
         channel_item = get_items_channel(channel_id, youtube)
 
         # YouTubeAPIを使って取得したアイテムをFirestoreに追加
         for single_Video in video_item:
             print('videoID', single_Video['id'])
+            event_type = single_Video['snippet']['liveBroadcastContent']
             event_type = single_Video['snippet']['liveBroadcastContent']
             tag_category = add_category_tag(single_Video['snippet']['title'], single_Video['snippet']['categoryId'])
             tag_member = add_member_tag(single_Video['snippet']['description'], channel_id, youtube)
