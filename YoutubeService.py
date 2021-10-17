@@ -6,7 +6,7 @@ from os.path import join, dirname
 from dotenv import load_dotenv
 
 
-class GetYoutubeItem:
+class YoutubeService:
 
     # APIキーを入力してYoutubeインスタンスを生成
     dotenv_path = join(dirname(__file__), '.env')
