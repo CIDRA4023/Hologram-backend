@@ -7,7 +7,6 @@ from dotenv import load_dotenv
 
 
 class YoutubeService:
-
     # APIキーを入力してYoutubeインスタンスを生成
     dotenv_path = join(dirname(__file__), '.env')
     load_dotenv(dotenv_path)
@@ -23,16 +22,20 @@ class YoutubeService:
 
     # Videoアイテムの取得
     def get_items_video(self):
+
+        # XmlParserから今週アップロードされた動画を取得
         xml_parse = XmlParser(channel_id=self.channel_id)
-        xml_video_id = xml_parse.parse_xml
+        xml_video_id = xml_parse.parse_xml()
         print('get_items_video')
+
         # クォータ使い切った時とJSONを返却されなかったときの例外処理
-        print(f'{xml_video_id}')
+        print("YoutubeService", f'{xml_video_id}')
         try:
-            video_items = youtube.videos().list(
+            video_items = self.youtube.videos().list(
                 part='snippet,liveStreamingDetails,statistics,contentDetails',
                 id=f'{xml_video_id}',
             ).execute()
+            print("YoutubeService", video_items)
             return video_items
         except googleapiclient.errors.HttpError as e:
             print('get_items_video', e)
@@ -43,7 +46,7 @@ class YoutubeService:
         print('channelID', self.channel_id)
         channel_item = None
         try:
-            channel_items = youtube.channels().list(
+            channel_items = self.youtube.channels().list(
                 part='snippet',
                 id=f'{self.channel_id}'
             ).execute()

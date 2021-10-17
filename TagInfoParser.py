@@ -1,13 +1,17 @@
+import re
+
+
 class TagInfoParser:
 
-    def __init__(self, title, category_id, desc, channel_name):
+    def __init__(self, title, category, desc, channel_name):
         self.title = title
-        self.category_id = category_id
+        self.category = category
         self.desc = desc
         self.channel_name = channel_name
 
     # 配信カテゴリのタグ付
     def add_category_tag(self):
+        print("taginfo_category")
         pattern_sing = 'sing|歌枠|KARAOKE'
         pattern_chat = 'chat|freetalk|supa|雑談|スパチャ|スーパーチャット|Donation Reading'
         pattern_watch_along = 'WATCHALONG|同時視聴|WATCH-A-LONG'
@@ -44,7 +48,7 @@ class TagInfoParser:
             return 'song'
         elif results_drawing:
             return 'drawing'
-        elif self.category_id == '20':
+        elif self.category == '20':
             return 'game'
         elif results_live:
             return 'live'
@@ -90,10 +94,10 @@ class TagInfoParser:
         else:
             tag_all_mem = re.findall(pattern_all_mem, self.desc)
 
-        # channel_name = get_items_channel(channel_id, youtube)['snippet']['title']
-        print(channel_name)
+        # self.channel_name = YoutubeService.get_items_channel(channel_id, youtube)['snippet']['title']
+        print(self.channel_name)
         # 投稿者を必ずタグに含めるために、チャンネル名からパターンに一致するものを検索しタグに追加
-        result_channel_name = re.findall(pattern_all_mem, channel_name, re.IGNORECASE)
+        result_channel_name = re.findall(pattern_all_mem, self.channel_name, re.IGNORECASE)
         tag_all_mem.extend(result_channel_name)
 
         # チャンネル名に一致したものと概要欄の中から一致したチャンネル名の2つが含まれていた場合いづれかを削除
@@ -125,15 +129,15 @@ class TagInfoParser:
 
         pattern_holo_stars = "花咲みやび|奏手イヅル|アルランディス|律可|アステル|岸堂天真|夕刻ロベル|影山シエン|荒咬オウガ"
 
-        # channel_name = get_items_channel(channel_id, youtube)['snippet']['title']
+        # channel_name = YoutubeService.get_items_channel()['snippet']['title']
 
-        if re.search(pattern_holo_jp, channel_name):
+        if re.search(pattern_holo_jp, self.channel_name):
             return holo_Jp
-        elif re.search(pattern_holo_en, channel_name):
+        elif re.search(pattern_holo_en, self.channel_name):
             return holo_En
-        elif re.search(pattern_holo_id, channel_name):
+        elif re.search(pattern_holo_id, self.channel_name):
             return holo_Id
-        elif re.search(pattern_holo_stars, channel_name):
+        elif re.search(pattern_holo_stars, self.channel_name):
             return holo_stars
         else:
             return 'none'
