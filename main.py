@@ -18,6 +18,7 @@ from dotenv import load_dotenv
 from XmlParser import XmlParser
 from TagInfoParser import TagInfoParser
 from YoutubeService import YoutubeService
+from FirebaseService import FirebaseService
 
 # xml_video_id = []
 error_channel_id = []
@@ -26,24 +27,6 @@ error_channel_id = []
 def main():
     # 処理前の時刻
     t1 = time.time()
-
-    dotenv_path = join(dirname(__file__), '.env')
-    load_dotenv(dotenv_path)
-    DATABASE_URL = os.environ.get("DATABASE_URL")
-    # YOUTUBE_API_KEY = os.environ.get("YOUTUBE_KEY")
-
-    if not firebase_admin._apps:
-        print('初期化')
-        cred = credentials.Certificate('hologram-firebase-adminsdk.json')
-
-        firebase_admin.initialize_app(cred, {
-            'databaseURL': DATABASE_URL,
-        })
-
-    ref_db = db.reference('/video')
-    # 
-    # YOUTUBE_API_KEY = YOUTUBE_API_KEY
-    # youtube = build('youtube', 'v3', developerKey=YOUTUBE_API_KEY)
 
     # チャンネルIDリスト
 
@@ -111,15 +94,15 @@ def main():
     ]
 
     # DB上のアイテムを読み込み
-    db_id = get_db_id(ref_db)
+    firebase = FirebaseService(video_items="")
+    firebase.get_db_id()
 
     # 各チャンネルIDごとにXMLparseからDB追加までの処理を実行
     for single_channel_id in channelIdList:
-
         # YoutubeServiceのインスタンス生成
         youtube = YoutubeService(channel_id=single_channel_id)
 
-        add_video_item(ref_db, youtube)
+        add_video_item(youtube)
 
     # delete_video_item(db_id, ref_db)
 
@@ -137,54 +120,6 @@ def main():
     # 経過時間を表示
     elapsed_time = t2 - t1
     print(f"経過時間：{elapsed_time}")
-
-
-# Videoアイテムの取得
-def get_items_video(channel_id, youtube, xml_video_id):
-    print('get_items_video')
-    # クォータ使い切った時とJSONを返却されなかったときの例外処理
-    print(f'{xml_video_id}')
-    try:
-        video_items = youtube.videos().list(
-            part='snippet,liveStreamingDetails,statistics,contentDetails',
-            id=f'{xml_video_id}',
-        ).execute()
-        return video_items
-    except googleapiclient.errors.HttpError as e:
-        print('get_items_video', e)
-        error_channel_id.append(channel_id)
-
-
-# チャンネルアイテムの取得
-def get_items_channel(channel_id, youtube):
-    print('channelID', channel_id)
-    single_channel_item = None
-    try:
-        channel_items = youtube.channels().list(
-            part='snippet',
-            id=f'{channel_id}'
-        ).execute()
-        for single in channel_items['items']:
-            single_channel_item = single
-
-        return single_channel_item
-
-    except googleapiclient.errors.HttpError as e:
-        print(e)
-        error_channel_id.append(channel_id)
-    except KeyError as e:
-        print('get_items_channel:KeyError', e)
-        error_channel_id.append(channel_id)
-
-
-# FirestoreのドキュメントIDを取得
-def get_db_id(rdb):
-    print('get_db_id')
-    id_list = []
-    key_val = rdb.get()
-    for key, val in key_val.items():
-        id_list.append(key)
-    return id_list
 
 
 def create_data_format(video_item, channel_item, event_type, tag_category, tag_member, tag_group, tag_platform):
@@ -316,7 +251,7 @@ def create_data_format(video_item, channel_item, event_type, tag_category, tag_m
 
 
 # RealtimeDatabaseに書き込み
-def add_video_item(rdb, youtube):
+def add_video_item(youtube):
     print('add_video_item')
     try:
         video_item = youtube.get_items_video()['items']
@@ -342,24 +277,13 @@ def add_video_item(rdb, youtube):
             print(tag_category, tag_member, tag_group)
             update_item = create_data_format(single_Video, channel_item, event_type, tag_category, tag_member,
                                              tag_group, tag_platform)
-            rdb.update(update_item)
+
+            firebase = FirebaseService(video_item=update_item)
+            firebase.write_video_item()
+
 
     except TypeError as e:
         print(e)
-
-
-def delete_video_item(db_id, rdb):
-    print('db', len(db_id), db_id)
-    print('xml', len(xml_video_id), xml_video_id)
-    # 一週間以上まえのアイテムのみ抽出
-    did = set(db_id).difference(set(xml_video_id))
-    print('did', did)
-    for d in did:
-        db_channelId = rdb.child(f'{d}').child('channelId').get()
-        # dbから取得したアイテムのチャンネルIDがエラーが発生したチャンネルIDリストの中に含まれていなければ削除
-        if db_channelId not in set(error_channel_id):
-            print('delete', f'{d}')
-            rdb.child(f'{d}').delete()
 
 
 main()
