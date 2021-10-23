@@ -7,7 +7,7 @@ from dateutil.relativedelta import relativedelta
 
 class XmlParser:
     # Xmlから取得した全てのVideoIDリスト
-    xml_video_id_list = []
+    xml_video_ids = []
     # エラーが発生して取得できなかったチャンネルIDリスト
     error_channel_id_list = set([])
 
@@ -25,7 +25,7 @@ class XmlParser:
 
         return utc_date_last_week_format
     
-    def parse_xml(self):
+    def get_xml_videos(self):
         # 各チャンネルのRSSフィードを取得
         rssUrl = f'https://www.youtube.com/feeds/videos.xml?channel_id={self.channel_id}'
         headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; Win64; x64)'}
@@ -49,17 +49,17 @@ class XmlParser:
                     if published_date < last_week_date:
                         break
                     video_id_list.append(single_video_id)
-                    self.xml_video_id_list.append(single_video_id)
+                    self.xml_video_ids.append(single_video_id)
 
             # 取得したvideoIdをカンマ区切り文字列にする
             formatted_video_id = ",".join(video_id_list)
-            print(self.xml_video_id_list)
+            print('XmlParser', self.xml_video_ids)
             return formatted_video_id
 
         # エラーが発生した際はそのチャンネルIDをリストに格納
         except urllib.error.HTTPError as e:
-            print('HTTPError', self.channel_id, e.code)
+            print('XmlParser', 'HTTPError', self.channel_id, e.code)
             self.error_channel_id_list.add(self.channel_id)
         except urllib.error.URLError as e:
-            print('URLError', channel_id, e.reason)
+            print('XmlParser', 'URLError', channel_id, e.reason)
             self.error_channel_id_list.add(self.channel_id)

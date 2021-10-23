@@ -110,13 +110,13 @@ def main():
     # 更新後のDB上のアイテムを読み込み
     firebase = FirebaseService(video_item="")
     update_db_items = firebase.get_db_id()
-    xml_video_id_list = XmlParser.xml_video_id_list
+    xml_video_ids = XmlParser.xml_video_ids
     # DB更新後に1周間以上前のアイテムがあったら削除
-    firebase.delete_video_item(update_db_items, xml_video_id_list, error_channel_ids)
+    firebase.delete_video_item(update_db_items, xml_video_ids, error_channel_ids)
 
     # XMLから取得したリストデータを削除
-    xml_video_id_list = XmlParser.xml_video_id_list
-    xml_video_id_list.clear()
+    xml_video_ids = XmlParser.xml_video_ids
+    xml_video_ids.clear()
 
     # 処理後の時刻
     t2 = time.time()

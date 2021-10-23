@@ -25,29 +25,29 @@ class YoutubeService:
 
         # XmlParserから今週アップロードされた動画を取得
         xml_parse = XmlParser(channel_id=self.channel_id)
-        xml_video_id = xml_parse.parse_xml()
+        xml_video_ids = xml_parse.get_xml_videos()
         print('get_items_video')
 
         # クォータ使い切った時とJSONを返却されなかったときの例外処理
-        print("YoutubeService", f'{xml_video_id}')
+        print("YoutubeService", f'{xml_video_ids}')
         try:
             video_items = self.youtube.videos().list(
                 part='snippet,liveStreamingDetails,statistics,contentDetails',
-                id=f'{xml_video_id}',
+                id=f'{xml_video_ids}',
             ).execute()
-            print("YoutubeService", video_items)
+            print('YoutubeService', video_items)
             return video_items
         except googleapiclient.errors.HttpError as e:
-            print('get_items_video', e)
+            print('YoutubeService', 'get_items_video', e)
             self.error_channel_ids.add(channel_id)
 
     # チャンネルアイテムの取得
     def get_items_channel(self):
-        print('channelID', self.channel_id)
+        print('YoutubeService', 'channelID', self.channel_id)
         channel_item = None
         try:
             channel_items = self.youtube.channels().list(
-                part='snippt',
+                part='snippet',
                 id=f'{self.channel_id}'
             ).execute()
             for single in channel_items['items']:
@@ -58,7 +58,8 @@ class YoutubeService:
         except googleapiclient.errors.HttpError as e:
             print(e)
             self.error_channel_ids.add(self.channel_id)
-            print('YoutubeService_chnnelID', self.error_channel_ids)
+            print('YoutubeService', self.error_channel_ids)
         except KeyError as e:
             print('get_items_channel:KeyError', e)
             self.error_channel_ids.add(self.channel_id)
+            print('YoutubeService', self.error_channel_ids)

@@ -21,7 +21,6 @@ class WriteDataFormatter:
         # 配信中のアイテムの書き込みデータ構造
         if self.event_type == 'live':
             start_time = self.video_item['liveStreamingDetails']['actualStartTime']
-            current_viewers = ''
             if 'concurrentViewers' in self.video_item['liveStreamingDetails']:
                 current_viewers = self.video_item['liveStreamingDetails']['concurrentViewers']
                 live_data = {

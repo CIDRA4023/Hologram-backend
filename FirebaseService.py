@@ -27,22 +27,23 @@ class FirebaseService:
 
     # FirestoreのドキュメントIDを取得
     def get_db_id(self):
-        print('get_db_id')
+        print("FirebaseService", 'get_db_id')
         id_list = []
         key_val = self.ref_db.get()
         # DB上に書き込まれたアイテムのvideoIdを取得
         for key, val in key_val.items():
             id_list.append(key)
         return id_list
-
+    
+    # 
     def write_video_item(self):
-        print("FirebaseService", "write")
+        print("FirebaseService", "write_video_item")
         self.ref_db.update(self.video_item)
 
     def delete_video_item(self, update_db_items, xml_video_ids, error_channel_ids):
-        print('update_db_items', len(update_db_items), update_db_items)
-        print('xml_video_ids', len(xml_video_ids), xml_video_ids)
-        print('error_channel_ids', len(error_channel_ids), error_channel_ids)
+        print("FirebaseService", 'update_db_items', len(update_db_items), update_db_items)
+        print("FirebaseService", 'xml_video_ids', len(xml_video_ids), xml_video_ids)
+        print("FirebaseService", 'error_channel_ids', len(error_channel_ids), error_channel_ids)
         
         # 一週間以上まえのアイテムのみ抽出
         # （更新後のDB上のアイテム）-（XMLで取得したアイテム）
