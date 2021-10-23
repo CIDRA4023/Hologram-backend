@@ -15,31 +15,16 @@ import os
 from os.path import join, dirname
 from dotenv import load_dotenv
 
-xml_video_id = []
-error_channel_id = []
+from XmlParser import XmlParser
+from TagInfoParser import TagInfoParser
+from YoutubeService import YoutubeService
+from FirebaseService import FirebaseService
+from WriteDataFormatter import WriteDataFormatter
 
 
 def main():
     # 処理前の時刻
     t1 = time.time()
-
-    dotenv_path = join(dirname(__file__), '.env')
-    load_dotenv(dotenv_path)
-    DATABASE_URL = os.environ.get("DATABASE_URL")
-    YOUTUBE_API_KEY = os.environ.get("YOUTUBE_KEY")
-
-    if not firebase_admin._apps:
-        print('初期化')
-        cred = credentials.Certificate('hologram-firebase-adminsdk.json')
-
-        firebase_admin.initialize_app(cred, {
-            'databaseURL': DATABASE_URL,
-        })
-
-    ref_db = db.reference('/video')
-
-    YOUTUBE_API_KEY = YOUTUBE_API_KEY
-    youtube = build('youtube', 'v3', developerKey=YOUTUBE_API_KEY)
 
     # チャンネルIDリスト
 
@@ -106,19 +91,36 @@ def main():
         'UCgmPnx-EEeOrZSg5Tiw7ZRQ'
     ]
 
-    # DB上のアイテムを読み込み
-    db_id = get_db_id(ref_db)
-
     # 各チャンネルIDごとにXMLparseからDB追加までの処理を実行
-    for channel_id in channelIdList:
-        add_video_item(db_id, ref_db, channel_id, youtube)
+    for single_channel_id in channelIdList:
+        # XmlParserから今週アップロードされた動画を取得
+        xml_parse = XmlParser(channel_id=single_channel_id)
+        xml_video_ids = xml_parse.get_xml_videos()
+        # YoutubeServiceのインスタンス生成
+        youtube = YoutubeService(xml_video_ids=xml_video_ids, channel_id=single_channel_id)
+        add_video_item(youtube)
 
-    delete_video_item(db_id, ref_db)
+    # YoutubeDataApiでエラーが発生したチャンネルID
+    youtube_error_ids = YoutubeService.error_channel_ids
+    print('youtube_error', youtube_error_ids)
+    # XML解析時にエラーが発生したチャンネルID
+    xml_error_ids = XmlParser.error_channel_id_list
+    print('xml_error', xml_error_ids)
+    # エラーが発生したチャンネルIDを結合
+    error_channel_ids = youtube_error_ids | xml_error_ids
+    print('ErrorID', error_channel_ids)
 
-    xml_video_id.clear()
+    # 更新後のDB上のアイテムを読み込み
+    firebase = FirebaseService(video_item="")
+    update_db_items = firebase.get_db_id()
+    xml_video_ids = XmlParser.xml_video_ids
+    # DB更新後に1周間以上前のアイテムがあったら削除
+    firebase.delete_video_item(update_db_items, xml_video_ids, error_channel_ids)
 
-    # delete_items_last_week(ref_db)
-    print(len(xml_video_id))
+    # XMLから取得したリストデータを削除
+    xml_video_ids = XmlParser.xml_video_ids
+    xml_video_ids.clear()
+
     # 処理後の時刻
     t2 = time.time()
 
@@ -127,397 +129,44 @@ def main():
     print(f"経過時間：{elapsed_time}")
 
 
-def parse_xml(channel_id):
-    rssUrl = f'https://www.youtube.com/feeds/videos.xml?channel_id={channel_id}'
-    headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; Win64; x64)'}
-    req = urllib.request.Request(rssUrl, None, headers)
-    print('parse_xml')
-    try:
-        with urllib.request.urlopen(req) as response:
-            # UrlからXmlデータを取得しrootへ格納
-            xmlData = response.read()
-            root = ET.fromstring(xmlData)
-            video_id_list = []
-            last_week = get_last_week_date()
-
-            # entryタグ内のvideoIDとpublishedAtを取得
-            for r in root.findall('{http://www.w3.org/2005/Atom}entry'):
-
-                vid = r[1].text
-                published = r[6].text
-                # 投稿時間が先週よりも前ならループ抜ける
-                if published < last_week:
-                    break
-                video_id_list.append(vid)
-                xml_video_id.append(vid)
-
-            # 取得したvideoIdをカンマ区切り文字列にする
-        videoIdList_str = ",".join(video_id_list)
-        return videoIdList_str
-
-    except urllib.error.HTTPError as e:
-        print('HTTPError', channel_id, e.code)
-        error_channel_id.append(channel_id)
-    except urllib.error.URLError as e:
-        print('URLError', channel_id, e.reason)
-        error_channel_id.append(channel_id)
-
-
-def get_last_week_date():
-    # 現在のイギリス時間を取得
-    utc_date = datetime.now(timezone.utc)
-    # 一週間前のイギリス時間を取得
-    utc_date_last_week = utc_date - relativedelta(weeks=1)
-    # 一週間前のイギリス時間を%Y-%m-%dT%H:%M:%SZ形式の文字列に変換
-    utc_date_last_week_format = utc_date_last_week.strftime('%Y-%m-%dT%H:%M:%SZ')
-
-    return utc_date_last_week_format
-
-
-# Videoアイテムの取得
-def get_items_video(channel_id, youtube):
-    print('get_items_video')
-    # クォータ使い切った時とJSONを返却されなかったときの例外処理
-    try:
-        video_items = youtube.videos().list(
-            part='snippet,liveStreamingDetails,statistics,contentDetails',
-            id=f'{parse_xml(channel_id)}',
-        ).execute()
-        return video_items
-    except googleapiclient.errors.HttpError as e:
-        print('get_items_video', e)
-        error_channel_id.append(channel_id)
-
-
-# チャンネルアイテムの取得
-def get_items_channel(channel_id, youtube):
-    print('channelID', channel_id)
-    single_channel_item = None
-    try:
-        channel_items = youtube.channels().list(
-            part='snippet',
-            id=f'{channel_id}'
-        ).execute()
-        for single in channel_items['items']:
-            single_channel_item = single
-
-        return single_channel_item
-
-    except googleapiclient.errors.HttpError as e:
-        print(e)
-        error_channel_id.append(channel_id)
-    except KeyError as e:
-        print('get_items_channel:KeyError', e)
-        error_channel_id.append(channel_id)
-
-
-# FirestoreのドキュメントIDを取得
-def get_db_id(rdb):
-    print('get_db_id')
-    id_list = []
-    key_val = rdb.get()
-    for key, val in key_val.items():
-        id_list.append(key)
-    return id_list
-
-
-# 動画のタグ付け
-def add_category_tag(video_title, video_category):
-    pattern_sing = 'sing|歌枠|KARAOKE'
-    pattern_chat = 'chat|freetalk|supa|雑談|スパチャ|スーパーチャット|Donation Reading'
-    pattern_watch_along = 'WATCHALONG|同時視聴|WATCH-A-LONG'
-    pattern_birthday = 'BIRTHDAY|生誕祭'
-    pattern_song = 'オリジナル曲|original song|original'
-    pattern_drawing = 'drawing'
-    pattern_live = 'LIVE'
-    pattern_cover = '歌ってみた|cover'
-    pattern_asmr = 'ASMR|A　S　M　R'
-    pattern_cooking = 'Cooking'
-    pattern_membership = 'メン限|member'
-
-    results_sing = re.search(pattern_sing, video_title, re.IGNORECASE)
-    results_chat = re.search(pattern_chat, video_title, re.IGNORECASE)
-    results_watch_along = re.search(pattern_watch_along, video_title, re.IGNORECASE)
-    results_birthday = re.search(pattern_birthday, video_title, re.IGNORECASE)
-    results_song = re.search(pattern_song, video_title, re.IGNORECASE)
-    results_drawing = re.search(pattern_drawing, video_title, re.IGNORECASE)
-    results_live = re.search(pattern_live, video_title)
-    results_cover = re.search(pattern_cover, video_title)
-    results_asmr = re.search(pattern_asmr, video_title, re.IGNORECASE)
-    results_cooking = re.search(pattern_cooking, video_title)
-    results_membership = re.search(pattern_membership, video_title, re.IGNORECASE)
-
-    if results_sing:
-        return 'sing'
-    elif results_chat:
-        return 'chat'
-    elif results_watch_along:
-        return 'watchAlong'
-    elif results_birthday:
-        return 'birthday'
-    elif results_song:
-        return 'song'
-    elif results_drawing:
-        return 'drawing'
-    elif video_category == '20':
-        return 'game'
-    elif results_live:
-        return 'live'
-    elif results_cover:
-        return 'cover'
-    elif results_asmr:
-        return 'ASMR'
-    elif results_cooking:
-        return 'cooking'
-    elif results_membership:
-        return 'membership'
-
-
-def add_member_tag(desc, channel_id, youtube):
-    pattern_all_mem = "ときのそら|AZKi|ロボ子|さくらみこ|白上フブキ|夏色まつり|夜空メル|赤井はあと|" \
-                      "アキ・ローゼンタール|アキロゼ|湊あくあ|癒月ちょこ|百鬼あやめ|紫咲シオン|大空スバル|大神ミオ" \
-                      "|猫又おかゆ|戌神ころね|不知火フレア|白銀ノエル|宝鐘マリン|兎田ぺこら|潤羽るしあ|星街すいせい|Suisei" \
-                      "|天音かなた|桐生ココ|角巻わため|常闇トワ|姫森ルーナ|雪花ラミィ|桃鈴ねね|獅白ぼたん|尾丸ポルカ" \
-                      "|IOFI|MOONA|ムーナ|Risu|Ollie|Anya|Reine|" \
-                      "Calliope|Kiara|Ina'nis|Gura|Amelia|IRyS|" \
-                      "hololive ホロライブ |" \
-                      "Sana|Fauna|Kronii|Mumei|Baelz|" \
-                      "花咲みやび|奏手イヅル|アルランディス|律可|アステル|岸堂天真|夕刻ロベル|影山シエン|荒咬オウガ"
-
-    pattern_split = "Don't forget to follow and subscribe to my sisters!|" \
-                    "Don't forget to follow Ollie's sisters!!!|" \
-                    "Mohon bantuannya ya, untuk teman seperjuangannya Iofi~!|" \
-                    "~ Hololive Indonesia ~|Support the other holoID gen 2 girls!|holoID!!|" \
-                    "｡.｡:|＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝|『百花繚乱花吹雪』|◆2020.12.29『曇天羊／角巻わため|" \
-                    "Relay|ーーーーーーーーーーーーーーーーーーー|" \
-                    "ーーー▼花咲みやびのがいよう▼ーーー|【ホロスターズ1期生】|▼△▼|【お知らせ】|ーーー|----------|【ホロスターズ1期生の先輩たち】|" \
-                    "★★★|✧✧✧|----------------------|≫ ──── ≪•◦ ❈ ◦•≫ ──── ≪|««-------------- ≪ °◇◆◇° ≫ --------------»»"
-
-    """
-    概要欄から正規表現に一致するものがあれば分割し、
-    その中からチャンネル名に一致するものを検索
-
-    一致しない場合はそのまま概要欄からチャンネル名に一致するものを検索
-    """
-    if re.search(pattern_split, desc):
-        split_desc = re.split(pattern_split, desc)[0]
-        tag_all_mem = re.findall(pattern_all_mem, split_desc)
-    else:
-        tag_all_mem = re.findall(pattern_all_mem, desc)
-
-    channel_name = get_items_channel(channel_id, youtube)['snippet']['title']
-    print(channel_name)
-    # 配信、投稿動画のチャンネル名をパターンに一致するものを検索しタグに追加
-    result_channel_name = re.findall(pattern_all_mem, channel_name, re.IGNORECASE)
-    tag_all_mem.extend(result_channel_name)
-
-    # チャンネル名に一致したものと概要欄の中から一致したチャンネル名の2つが含まれていた場合いづれかを削除
-    if {'星街すいせい', 'Suisei'} <= set(tag_all_mem):
-        tag_all_mem.remove('星街すいせい')
-    elif {'IOFI', 'Iofi'} <= set(tag_all_mem):
-        tag_all_mem.remove('IOFI')
-    else:
-        pass
-
-    return ",".join(set(tag_all_mem))
-    # print(",".join(set(tag_all_mem)))
-
-
-def add_group_tag(channel_id, youtube):
-    holo_Jp = 'holoJp'
-    holo_En = 'holoEn'
-    holo_Id = 'holoId'
-    holo_stars = 'holoStars'
-
-    pattern_holo_jp = "ときのそら|AZKi|ロボ子|さくらみこ|白上フブキ|夏色まつり|夜空メル|赤井はあと|" \
-                      "アキ・ローゼンタール|アキロゼ|湊あくあ|癒月ちょこ|百鬼あやめ|紫咲シオン|大空スバル|大神ミオ" \
-                      "|猫又おかゆ|戌神ころね|不知火フレア|白銀ノエル|宝鐘マリン|兎田ぺこら|潤羽るしあ|Suisei" \
-                      "|天音かなた|桐生ココ|角巻わため|常闇トワ|姫森ルーナ|雪花ラミィ|桃鈴ねね|獅白ぼたん|尾丸ポルカ"
-
-    pattern_holo_en = "Calliope|Kiara|Ina'nis|Gura|Amelia|IRyS|Sana|Fauna|Kronii|Mumei|Baelz"
-
-    pattern_holo_id = "Iofi|Moona|Risu|Ollie|Anya|Reine"
-
-    pattern_holo_stars = "花咲みやび|奏手イヅル|アルランディス|律可|アステル|岸堂天真|夕刻ロベル|影山シエン|荒咬オウガ"
-
-    channel_name = get_items_channel(channel_id, youtube)['snippet']['title']
-
-    if re.search(pattern_holo_jp, channel_name):
-        return holo_Jp
-    elif re.search(pattern_holo_en, channel_name):
-        return holo_En
-    elif re.search(pattern_holo_id, channel_name):
-        return holo_Id
-    elif re.search(pattern_holo_stars, channel_name):
-        return holo_stars
-    else:
-        return 'none'
-
-
-def create_data_format(video_item, channel_item, event_type, tag_category, tag_member, tag_group, tag_platform):
-    video_id = video_item['id']
-    video_title = video_item['snippet']['title']
-    thumbnail_url = video_item['snippet']['thumbnails']['high']['url']
-
-    channel_id = video_item['snippet']['channelId']
-    channel_name = channel_item['snippet']['title']
-    channel_icon_url = channel_item['snippet']['thumbnails']['high']['url']
-
-    if event_type == 'live':
-        start_time = video_item['liveStreamingDetails']['actualStartTime']
-
-        if 'concurrentViewers' in video_item['liveStreamingDetails']:
-            current_viewers = video_item['liveStreamingDetails']['concurrentViewers']
-            live_data = {
-                video_id: {
-                    u'title': video_title,
-                    u'thumbnailUrl': thumbnail_url,
-                    u'startTime': start_time,
-                    u'currentViewers': current_viewers,
-                    u'channelId': channel_id,
-                    u'channelName': channel_name,
-                    u'channelIconUrl': channel_icon_url,
-                    u'eventType': event_type,
-                    u'tag': {
-                        'category': tag_category,
-                        'member': tag_member,
-                        'group': tag_group,
-                        'platform': tag_platform
-                    }
-                }
-            }
-            return live_data
-        # プレミアム公開中の動画（視聴者数が取得できない）
-        elif 'concurrentViewers' not in video_item['liveStreamingDetails']:
-            live_premium_data = {
-                video_id: {
-                    u'title': video_title,
-                    u'thumbnailUrl': thumbnail_url,
-                    u'startTime': start_time,
-                    u'currentViewers': 'プレミアム公開中',
-                    u'channelId': channel_id,
-                    u'channelName': channel_name,
-                    u'channelIconUrl': channel_icon_url,
-                    u'eventType': event_type,
-                    u'tag': {
-                        'category': tag_category,
-                        'member': tag_member,
-                        'group': tag_group,
-                        'platform': tag_platform
-                    }
-                }
-            }
-            return live_premium_data
-
-    elif event_type == 'upcoming':
-        scheduled_start_time = video_item['liveStreamingDetails']['scheduledStartTime']
-        upcoming_data = {
-            video_id: {
-                u'title': video_title,
-                u'thumbnailUrl': thumbnail_url,
-                u'scheduledStartTime': scheduled_start_time,
-                u'channelId': channel_id,
-                u'channelName': channel_name,
-                u'channelIconUrl': channel_icon_url,
-                u'eventType': event_type,
-                u'tag': {
-                    'category': tag_category,
-                    'member': tag_member,
-                    'group': tag_group,
-                    'platform': tag_platform
-                }
-            }
-        }
-        return upcoming_data
-
-    elif event_type == 'none':
-        published_at = video_item['snippet']['publishedAt']
-        view_count = video_item['statistics']['viewCount']
-
-        duration = video_item['contentDetails']['duration']
-        if 'likeCount' in video_item['statistics']:
-            like_count = video_item['statistics']['likeCount']
-            none_data = {
-                video_id: {
-                    u'title': video_title,
-                    u'thumbnailUrl': thumbnail_url,
-                    u'publishedAt': published_at,
-                    u'viewCount': view_count,
-                    u'likeCount': like_count,
-                    u'channelId': channel_id,
-                    u'channelName': channel_name,
-                    u'channelIconUrl': channel_icon_url,
-                    u'eventType': event_type,
-                    u'duration': duration,
-                    u'tag': {
-                        'category': tag_category,
-                        'member': tag_member,
-                        'group': tag_group,
-                        'platform': tag_platform
-                    }
-                }
-            }
-            return none_data
-        # 評価非表示の場合
-        if 'likeCount' not in video_item['statistics']:
-            none_hide_data = {
-                video_id: {
-                    u'title': video_title,
-                    u'thumbnailUrl': thumbnail_url,
-                    u'publishedAt': published_at,
-                    u'viewCount': view_count,
-                    u'likeCount': 'None',
-                    u'channelId': channel_id,
-                    u'channelName': channel_id,
-                    u'channelIconUrl': channel_icon_url,
-                    u'eventType': event_type,
-                    u'tag': {
-                        'category': tag_category,
-                        'member': tag_member,
-                        'group': tag_group,
-                        'platform': tag_platform
-                    }
-                }
-            }
-            return none_hide_data
-
-
 # RealtimeDatabaseに書き込み
-def add_video_item(id_list, rdb, channel_id, youtube):
+def add_video_item(youtube):
     print('add_video_item')
     try:
-        video_item = get_items_video(channel_id, youtube)['items']
-        channel_item = get_items_channel(channel_id, youtube)
+        video_items = youtube.get_items_video()['items']
 
         # YouTubeAPIを使って取得したアイテムをFirestoreに追加
-        for single_Video in video_item:
-            print('videoID', single_Video['id'])
-            event_type = single_Video['snippet']['liveBroadcastContent']
-            tag_category = add_category_tag(single_Video['snippet']['title'], single_Video['snippet']['categoryId'])
-            tag_member = add_member_tag(single_Video['snippet']['description'], channel_id, youtube)
-            tag_group = add_group_tag(channel_id, youtube)
+        for video_item in video_items:
+            print('MainVideoID', video_item['id'])
+
+            # Youtubeから動画、チャンネル情報を取得
+            event_type = video_item['snippet']['liveBroadcastContent']
+            title = video_item['snippet']['title']
+            category = video_item['snippet']['categoryId']
+            desc = video_item['snippet']['description']
+            channel_item = youtube.get_items_channel()
+            channel_name = youtube.get_items_channel()['snippet']['title']
+
+            # タグ情報を作成
+            tag = TagInfoParser(title=title, category=category, desc=desc, channel_name=channel_name)
+            tag_category = tag.add_category_tag()
+            tag_member = tag.add_member_tag()
+            tag_group = tag.add_group_tag()
             tag_platform = 'youtube'
 
-            update_item = create_data_format(single_Video, channel_item, event_type, tag_category, tag_member,
-                                             tag_group, tag_platform)
-            rdb.update(update_item)
+            print(tag_category, tag_member, tag_group)
+            write_format = WriteDataFormatter(video_item=video_item, channel_item=channel_item, event_type=event_type,
+                                              tag_category=category, tag_member=tag_member, tag_group=tag_group,
+                                              tag_platform=tag_platform)
+            update_item = write_format.create_data_format()
+            print('Update_Item', update_item)
+
+            # DBへ書き込み
+            firebase = FirebaseService(video_item=update_item)
+            firebase.write_video_item()
 
     except TypeError as e:
         print(e)
-
-
-def delete_video_item(db_id, rdb):
-    print('db', len(db_id), db_id)
-    print('xml', len(xml_video_id), xml_video_id)
-    # 一週間以上まえのアイテムのみ抽出
-    did = set(db_id).difference(set(xml_video_id))
-    print('did', did)
-    for d in did:
-        db_channelId = rdb.child(f'{d}').child('channelId').get()
-        # dbから取得したアイテムのチャンネルIDがエラーが発生したチャンネルIDリストの中に含まれていなければ削除
-        if db_channelId not in set(error_channel_id):
-            print('delete', f'{d}')
-            rdb.child(f'{d}').delete()
 
 
 main()
