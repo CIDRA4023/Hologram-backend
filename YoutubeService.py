@@ -17,23 +17,21 @@ class YoutubeService:
     YOUTUBE_API_KEY = YOUTUBE_API_KEY
     youtube = build('youtube', 'v3', developerKey=YOUTUBE_API_KEY)
 
-    def __init__(self, channel_id):
+    def __init__(self, xml_video_ids, channel_id):
+        self.xml_video_ids = xml_video_ids
         self.channel_id = channel_id
 
     # Videoアイテムの取得
     def get_items_video(self):
 
-        # XmlParserから今週アップロードされた動画を取得
-        xml_parse = XmlParser(channel_id=self.channel_id)
-        xml_video_ids = xml_parse.get_xml_videos()
         print('get_items_video')
 
         # クォータ使い切った時とJSONを返却されなかったときの例外処理
-        print("YoutubeService", f'{xml_video_ids}')
+        print("YoutubeService", f'{self.xml_video_ids}')
         try:
             video_items = self.youtube.videos().list(
                 part='snippet,liveStreamingDetails,statistics,contentDetails',
-                id=f'{xml_video_ids}',
+                id=f'{self.xml_video_ids}',
             ).execute()
             print('YoutubeService', video_items)
             return video_items

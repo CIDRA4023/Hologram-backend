@@ -93,8 +93,11 @@ def main():
 
     # 各チャンネルIDごとにXMLparseからDB追加までの処理を実行
     for single_channel_id in channelIdList:
+        # XmlParserから今週アップロードされた動画を取得
+        xml_parse = XmlParser(channel_id=single_channel_id)
+        xml_video_ids = xml_parse.get_xml_videos()
         # YoutubeServiceのインスタンス生成
-        youtube = YoutubeService(channel_id=single_channel_id)
+        youtube = YoutubeService(xml_video_ids=xml_video_ids, channel_id=single_channel_id)
         add_video_item(youtube)
 
     # YoutubeDataApiでエラーが発生したチャンネルID
