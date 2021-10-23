@@ -19,6 +19,7 @@ from XmlParser import XmlParser
 from TagInfoParser import TagInfoParser
 from YoutubeService import YoutubeService
 from FirebaseService import FirebaseService
+from WriteDataFormatter import WriteDataFormatter
 
 # xml_video_id = []
 error_channel_id = []
@@ -94,7 +95,7 @@ def main():
     ]
 
     # DB上のアイテムを読み込み
-    firebase = FirebaseService(video_items="")
+    firebase = FirebaseService(video_item="")
     firebase.get_db_id()
 
     # 各チャンネルIDごとにXMLparseからDB追加までの処理を実行
@@ -122,165 +123,44 @@ def main():
     print(f"経過時間：{elapsed_time}")
 
 
-def create_data_format(video_item, channel_item, event_type, tag_category, tag_member, tag_group, tag_platform):
-    video_id = video_item['id']
-    video_title = video_item['snippet']['title']
-    thumbnail_url = video_item['snippet']['thumbnails']['high']['url']
-
-    channel_id = video_item['snippet']['channelId']
-    channel_name = channel_item['snippet']['title']
-    channel_icon_url = channel_item['snippet']['thumbnails']['high']['url']
-
-    if event_type == 'live':
-        start_time = video_item['liveStreamingDetails']['actualStartTime']
-
-        if 'concurrentViewers' in video_item['liveStreamingDetails']:
-            current_viewers = video_item['liveStreamingDetails']['concurrentViewers']
-            live_data = {
-                video_id: {
-                    u'title': video_title,
-                    u'thumbnailUrl': thumbnail_url,
-                    u'startTime': start_time,
-                    u'currentViewers': current_viewers,
-                    u'channelId': channel_id,
-                    u'channelName': channel_name,
-                    u'channelIconUrl': channel_icon_url,
-                    u'eventType': event_type,
-                    u'tag': {
-                        'category': tag_category,
-                        'member': tag_member,
-                        'group': tag_group,
-                        'platform': tag_platform
-                    }
-                }
-            }
-            return live_data
-        # プレミアム公開中の動画（視聴者数が取得できない）
-        elif 'concurrentViewers' not in video_item['liveStreamingDetails']:
-            live_premium_data = {
-                video_id: {
-                    u'title': video_title,
-                    u'thumbnailUrl': thumbnail_url,
-                    u'startTime': start_time,
-                    u'currentViewers': 'プレミアム公開中',
-                    u'channelId': channel_id,
-                    u'channelName': channel_name,
-                    u'channelIconUrl': channel_icon_url,
-                    u'eventType': event_type,
-                    u'tag': {
-                        'category': tag_category,
-                        'member': tag_member,
-                        'group': tag_group,
-                        'platform': tag_platform
-                    }
-                }
-            }
-            return live_premium_data
-
-    elif event_type == 'upcoming':
-        scheduled_start_time = video_item['liveStreamingDetails']['scheduledStartTime']
-        upcoming_data = {
-            video_id: {
-                u'title': video_title,
-                u'thumbnailUrl': thumbnail_url,
-                u'scheduledStartTime': scheduled_start_time,
-                u'channelId': channel_id,
-                u'channelName': channel_name,
-                u'channelIconUrl': channel_icon_url,
-                u'eventType': event_type,
-                u'tag': {
-                    'category': tag_category,
-                    'member': tag_member,
-                    'group': tag_group,
-                    'platform': tag_platform
-                }
-            }
-        }
-        return upcoming_data
-
-    elif event_type == 'none':
-        published_at = video_item['snippet']['publishedAt']
-        view_count = video_item['statistics']['viewCount']
-
-        duration = video_item['contentDetails']['duration']
-        if 'likeCount' in video_item['statistics']:
-            like_count = video_item['statistics']['likeCount']
-            none_data = {
-                video_id: {
-                    u'title': video_title,
-                    u'thumbnailUrl': thumbnail_url,
-                    u'publishedAt': published_at,
-                    u'viewCount': view_count,
-                    u'likeCount': like_count,
-                    u'channelId': channel_id,
-                    u'channelName': channel_name,
-                    u'channelIconUrl': channel_icon_url,
-                    u'eventType': event_type,
-                    u'duration': duration,
-                    u'tag': {
-                        'category': tag_category,
-                        'member': tag_member,
-                        'group': tag_group,
-                        'platform': tag_platform
-                    }
-                }
-            }
-            return none_data
-        # 評価非表示の場合
-        if 'likeCount' not in video_item['statistics']:
-            none_hide_data = {
-                video_id: {
-                    u'title': video_title,
-                    u'thumbnailUrl': thumbnail_url,
-                    u'publishedAt': published_at,
-                    u'viewCount': view_count,
-                    u'likeCount': 'None',
-                    u'channelId': channel_id,
-                    u'channelName': channel_id,
-                    u'channelIconUrl': channel_icon_url,
-                    u'eventType': event_type,
-                    u'tag': {
-                        'category': tag_category,
-                        'member': tag_member,
-                        'group': tag_group,
-                        'platform': tag_platform
-                    }
-                }
-            }
-            return none_hide_data
-
-
 # RealtimeDatabaseに書き込み
 def add_video_item(youtube):
     print('add_video_item')
     try:
-        video_item = youtube.get_items_video()['items']
+        video_items = youtube.get_items_video()['items']
         # channel_item = get_items_channel(channel_id, youtube)
 
         # YouTubeAPIを使って取得したアイテムをFirestoreに追加
-        for single_Video in video_item:
-            print('MainVideoID', single_Video['id'])
-            event_type = single_Video['snippet']['liveBroadcastContent']
+        for video_item in video_items:
+            print('MainVideoID', video_item['id'])
 
-            title = single_Video['snippet']['title']
-            category = single_Video['snippet']['categoryId']
-            desc = single_Video['snippet']['description']
-
+            # Youtubeから動画、チャンネル情報を取得
+            event_type = video_item['snippet']['liveBroadcastContent']
+            title = video_item['snippet']['title']
+            category = video_item['snippet']['categoryId']
+            desc = video_item['snippet']['description']
             channel_item = youtube.get_items_channel()
             channel_name = youtube.get_items_channel()['snippet']['title']
-            tag = TagInfoParser(title=title, category=category, desc=desc, channel_name=channel_name)
 
+            # タグ情報を作成
+            tag = TagInfoParser(title=title, category=category, desc=desc, channel_name=channel_name)
             tag_category = tag.add_category_tag()
             tag_member = tag.add_member_tag()
             tag_group = tag.add_group_tag()
             tag_platform = 'youtube'
+
             print(tag_category, tag_member, tag_group)
-            update_item = create_data_format(single_Video, channel_item, event_type, tag_category, tag_member,
-                                             tag_group, tag_platform)
+            write_format = WriteDataFormatter(video_item=video_item, channel_item=channel_item, event_type=event_type,
+                                              tag_category=category, tag_member=tag_member, tag_group=tag_group,
+                                              tag_platform=tag_platform)
 
+            update_item = write_format.create_data_format()
+            print('Update_Item', update_item)
+
+            # DBへ書き込み
             firebase = FirebaseService(video_item=update_item)
-            firebase.write_video_item()
 
+            firebase.write_video_item()
 
     except TypeError as e:
         print(e)

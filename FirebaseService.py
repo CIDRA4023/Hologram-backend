@@ -35,7 +35,7 @@ class FirebaseService:
 
     def write_video_item(self):
         print("FirebaseService", "write")
-        self.ref_db.update(self.video_items)
+        self.ref_db.update(self.video_item)
 
 
     # def delete_video_item(db_id, rdb):
