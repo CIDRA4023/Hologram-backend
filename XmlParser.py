@@ -9,7 +9,7 @@ class XmlParser:
     # Xmlから取得した全てのVideoIDリスト
     xml_video_id_list = []
     # エラーが発生して取得できなかったチャンネルIDリスト
-    error_channel_id_list = []
+    error_channel_id_list = set([])
 
     def __init__(self, channel_id):
         self.channel_id = channel_id
@@ -59,7 +59,7 @@ class XmlParser:
         # エラーが発生した際はそのチャンネルIDをリストに格納
         except urllib.error.HTTPError as e:
             print('HTTPError', self.channel_id, e.code)
-            self.error_channel_id_list.append(self.channel_id)
+            self.error_channel_id_list.add(self.channel_id)
         except urllib.error.URLError as e:
             print('URLError', channel_id, e.reason)
-            self.error_channel_id_list.append(self.channel_id)
+            self.error_channel_id_list.add(self.channel_id)

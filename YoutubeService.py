@@ -7,15 +7,15 @@ from dotenv import load_dotenv
 
 
 class YoutubeService:
+    # エラーが発生して取得できなかったチャンネルIDリスト
+    error_channel_ids = set([])
+
     # APIキーを入力してYoutubeインスタンスを生成
     dotenv_path = join(dirname(__file__), '.env')
     load_dotenv(dotenv_path)
     YOUTUBE_API_KEY = os.environ.get("YOUTUBE_KEY")
     YOUTUBE_API_KEY = YOUTUBE_API_KEY
     youtube = build('youtube', 'v3', developerKey=YOUTUBE_API_KEY)
-
-    # エラーが発生して取得できなかったチャンネルIDリスト
-    error_channel_ids = []
 
     def __init__(self, channel_id):
         self.channel_id = channel_id
@@ -39,7 +39,7 @@ class YoutubeService:
             return video_items
         except googleapiclient.errors.HttpError as e:
             print('get_items_video', e)
-            error_channel_ids.append(channel_id)
+            self.error_channel_ids.add(channel_id)
 
     # チャンネルアイテムの取得
     def get_items_channel(self):
@@ -47,7 +47,7 @@ class YoutubeService:
         channel_item = None
         try:
             channel_items = self.youtube.channels().list(
-                part='snippet',
+                part='snippt',
                 id=f'{self.channel_id}'
             ).execute()
             for single in channel_items['items']:
@@ -57,7 +57,8 @@ class YoutubeService:
 
         except googleapiclient.errors.HttpError as e:
             print(e)
-            error_channel_ids.append(self.channel_id)
+            self.error_channel_ids.add(self.channel_id)
+            print('YoutubeService_chnnelID', self.error_channel_ids)
         except KeyError as e:
             print('get_items_channel:KeyError', e)
-            error_channel_id.append(self.channel_id)
+            self.error_channel_ids.add(self.channel_id)
