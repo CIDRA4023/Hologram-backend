@@ -156,7 +156,7 @@ def add_video_item(youtube):
 
             print(tag_category, tag_member, tag_group)
             write_format = WriteDataFormatter(video_item=video_item, channel_item=channel_item, event_type=event_type,
-                                              tag_category=category, tag_member=tag_member, tag_group=tag_group,
+                                              tag_category=tag_category, tag_member=tag_member, tag_group=tag_group,
                                               tag_platform=tag_platform)
             update_item = write_format.create_data_format()
             print('Update_Item', update_item)

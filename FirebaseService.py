@@ -14,7 +14,7 @@ class FirebaseService:
     DATABASE_URL = os.environ.get("DATABASE_URL")
     if not firebase_admin._apps:
         print('初期化')
-        cred = credentials.Certificate('hologram-firebase-adminsdk.json')
+        cred = credentials.Certificate('hologram-test-firebase-adminsdk.json')
 
         firebase_admin.initialize_app(cred, {
             'databaseURL': DATABASE_URL,
