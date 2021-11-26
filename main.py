@@ -88,7 +88,13 @@ def main():
         'UCO_aKKYxn4tvrqPjcTzZ6EQ',
         'UCmbs8T6MWqUHP1tIQvSgKrg',
         'UC3n5uGu18FoCy23ggWWp8tA',
-        'UCgmPnx-EEeOrZSg5Tiw7ZRQ'
+        'UCgmPnx-EEeOrZSg5Tiw7ZRQ',
+
+        'UCENwRMx5Yh42zWpzURebzTw',
+        'UCs9_O1tRPMQTHQ-N_L6FU2g',
+        'UC6eWCld0KwmyHFbAqK3V-Rw',
+        'UCIBY1ollUsauvVi4hW4cumw',
+        'UC_vMYWcDjmfdpH6r4TTn1MQ'
     ]
 
     # 各チャンネルIDごとにXMLparseからDB追加までの処理を実行
