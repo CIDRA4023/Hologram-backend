@@ -68,7 +68,7 @@ class TagInfoParser:
                           "|猫又おかゆ|戌神ころね|不知火フレア|白銀ノエル|宝鐘マリン|兎田ぺこら|潤羽るしあ|星街すいせい|Suisei" \
                           "|天音かなた|桐生ココ|角巻わため|常闇トワ|姫森ルーナ|雪花ラミィ|桃鈴ねね|獅白ぼたん|尾丸ポルカ" \
                           "|ラプラス・ダークネス|鷹嶺ルイ|博衣こより|沙花叉クロヱ|風真いろは"\
-                          "|IOFI|MOONA|ムーナ|Risu|Ollie|Anya|Reine|" \
+                          "|IOFI|MOONA|Moona|ムーナ|Risu|Ollie|Anya|Reine|" \
                           "Calliope|Kiara|Ina'nis|Gura|Amelia|IRyS|" \
                           "hololive ホロライブ |" \
                           "Sana|Fauna|Kronii|Mumei|Baelz|" \
@@ -82,7 +82,8 @@ class TagInfoParser:
                         "Relay|ーーーーーーーーーーーーーーーーーーー|" \
                         "ーーー▼花咲みやびのがいよう▼ーーー|【ホロスターズ1期生】|▼△▼|【お知らせ】|ーーー|----------|【ホロスターズ1期生の先輩たち】|" \
                         "★★★|✧✧✧|----------------------|≫ ──── ≪•◦ ❈ ◦•≫ ──── ≪|««-------------- ≪ °◇◆◇° ≫ --------------»»|" \
-                        "✦••┈┈┈••┈┈┈••✦••┈┈┈••┈┈┈••✦|￥*⇔*――|━━━━━━━━━━━━━━━━━━━━━━━"
+                        "✦••┈┈┈••┈┈┈••✦••┈┈┈••┈┈┈••✦|￥*⇔*――|━━━━━━━━━━━━━━━━━━━━━━━|" \
+                        "▶Channel"
 
         """
         概要欄から正規表現に一致するものがあれば分割し、
@@ -124,13 +125,14 @@ class TagInfoParser:
                           "アキ・ローゼンタール|アキロゼ|湊あくあ|癒月ちょこ|百鬼あやめ|紫咲シオン|大空スバル|大神ミオ" \
                           "|猫又おかゆ|戌神ころね|不知火フレア|白銀ノエル|宝鐘マリン|兎田ぺこら|潤羽るしあ|Suisei" \
                           "|天音かなた|桐生ココ|角巻わため|常闇トワ|姫森ルーナ|雪花ラミィ|桃鈴ねね|獅白ぼたん|尾丸ポルカ" \
-                          "|ラプラス・ダークネス|鷹嶺ルイ|博衣こより|沙花叉クロヱ|風真いろは"
+                          "|ラプラス・ダークネス|鷹嶺ルイ|博衣こより|沙花叉クロヱ|風真いろは" \
+                          "|ホロライブ"
 
-        pattern_holo_en = "Calliope|Kiara|Ina'nis|Gura|Amelia|IRyS|Sana|Fauna|Kronii|Mumei|Baelz"
+        pattern_holo_en = "Calliope|Kiara|Ina'nis|Gura|Amelia|IRyS|Sana|Fauna|Kronii|Mumei|Baelz|English"
 
-        pattern_holo_id = "Iofi|Moona|Risu|Ollie|Anya|Reine"
+        pattern_holo_id = "Iofi|Moona|Risu|Ollie|Anya|Reine|Indonesia"
 
-        pattern_holo_stars = "花咲みやび|奏手イヅル|アルランディス|律可|アステル|岸堂天真|夕刻ロベル|影山シエン|荒咬オウガ"
+        pattern_holo_stars = "花咲みやび|奏手イヅル|アルランディス|律可|アステル|岸堂天真|夕刻ロベル|影山シエン|荒咬オウガ|holostars"
 
         # channel_name = YoutubeService.get_items_channel()['snippet']['title']
 
